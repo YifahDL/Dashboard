@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="apple-mobile-web-app-title" content="DL Production">
+<title>DL Production</title>
+<style>
+:root {
+  --bg: #f5f3ef;
+  --surface: #ffffff;
+  --border: #e8e4de;
+  --text: #1a1714;
+  --text2: #6b6560;
+  --text3: #9c9590;
+  --accent: #1e1c18;
+  --g: #2a6048; --gb: #e8f2ec;
+  --a: #8a3e0a; --ab: #fdf0e0;
+  --r: #8f1f1f; --rb: #fce8e8;
+  --b: #1a3f7a; --bb: #e8f0fa;
+  --p: #4a1f8a; --pb: #f0ebfa;
+  --t: #0d5a48; --tb: #e0f0eb;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); font-size: 15px; }
+
+/* HEADER */
+.hdr { background: var(--accent); color: #f0ede8; padding: 14px 16px; display: flex; align-items: center; justify-content: space-between; }
+.brand { font-size: 13px; font-weight: 600; letter-spacing: 2.5px; text-transform: uppercase; }
+.live { display: flex; align-items: center; gap: 5px; }
+.dot { width: 7px; height: 7px; border-radius: 50%; background: #1D9E75; animation: pulse 2s infinite; }
+@keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:.3; } }
+.live-txt { font-size: 11px; color: #8ecfbb; }
+.updated { font-size: 10px; color: rgba(255,255,255,.4); margin-top: 2px; font-family: ui-monospace, monospace; }
+
+/* SEARCH */
+.search-bar { background: var(--surface); border-bottom: 1px solid var(--border); padding: 10px 14px; }
+.search-inner { display: flex; align-items: center; background: var(--bg); border: 1px solid var(--border); border-radius: 10px; padding: 0 12px; }
+.search-inner input { flex: 1; padding: 9px 0; border: none; background: none; font-size: 14px; color: var(--text); outline: none; }
+.search-inner input::placeholder { color: var(--text3); }
+.search-inner .x { background: none; border: none; color: var(--text3); font-size: 16px; cursor: pointer; padding: 4px; display: none; }
+.search-results { margin-top: 10px; display: none; }
+.src-label { font-size: 10px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; color: var(--text3); padding-bottom: 6px; margin-bottom: 6px; border-bottom: 1px solid var(--border); }
+.res-item { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 11px 13px; margin-bottom: 7px; }
+.res-name { font-size: 13px; font-weight: 600; margin-bottom: 3px; }
+.res-sku { font-size: 11px; font-family: ui-monospace, monospace; color: var(--text2); margin-bottom: 5px; }
+.res-meta { font-size: 12px; color: var(--text2); line-height: 1.6; }
+.res-tags { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 7px; }
+.no-res { text-align: center; padding: 24px; font-size: 13px; color: var(--text2); }
+
+/* NAV */
+.nav { background: var(--surface); border-bottom: 1px solid var(--border); display: flex; }
+.nav button { flex: 1; padding: 12px 4px; font-size: 12px; font-weight: 500; background: none; border: none; border-bottom: 2px solid transparent; cursor: pointer; color: var(--text2); }
+.nav button.on { border-bottom-color: var(--accent); color: var(--accent); font-weight: 600; }
+
+/* PAGES */
+.page { display: none; padding: 14px; }
+.page.on { display: block; }
+
+/* STATS */
+.stats { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
+.stat { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; }
+.stat-val { font-size: 26px; font-weight: 300; line-height: 1; margin-bottom: 4px; }
+.stat-lbl { font-size: 11px; color: var(--text2); line-height: 1.3; }
+
+/* CARDS */
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 14px; margin-bottom: 12px; }
+.card-title { font-size: 10px; font-weight: 600; letter-spacing: 1.2px; text-transform: uppercase; color: var(--text3); margin-bottom: 12px; }
+
+/* ROWS */
+.item { display: flex; align-items: flex-start; justify-content: space-between; padding: 11px 0; border-bottom: 1px solid var(--border); gap: 10px; }
+.item:last-child { border-bottom: none; padding-bottom: 0; }
+.item-left { flex: 1; min-width: 0; }
+.item-name { font-size: 13px; font-weight: 600; line-height: 1.3; margin-bottom: 3px; }
+.item-sub { font-size: 12px; color: var(--text2); }
+.item-right { flex-shrink: 0; text-align: left; }
+.item-qty { font-size: 12px; font-family: ui-monospace, monospace; color: var(--text2); }
+.item-date { font-size: 11px; color: var(--text3); margin-top: 3px; font-family: ui-monospace, monospace; }
+.tags { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 6px; }
+
+/* BADGES */
+.badge { display: inline-block; padding: 2px 8px; border-radius: 20px; font-size: 11px; font-weight: 500; }
+.bg { background: var(--gb); color: var(--g); }
+.ba { background: var(--ab); color: var(--a); }
+.br { background: var(--rb); color: var(--r); }
+.bb { background: var(--bb); color: var(--b); }
+.bp { background: var(--pb); color: var(--p); }
+.bt { background: var(--tb); color: var(--t); }
+.bz { background: #f0ede8; color: var(--text2); }
+
+/* ALERTS */
+.alert { border-radius: 8px; padding: 12px 14px; margin-bottom: 9px; border-left: 3px solid; }
+.alert-title { font-size: 13px; font-weight: 600; margin-bottom: 3px; }
+.alert-body { font-size: 12px; line-height: 1.5; }
+.al-r { background: var(--rb); border-color: #e05050; color: var(--r); }
+.al-a { background: var(--ab); border-color: #e8960a; color: var(--a); }
+.al-g { background: var(--gb); border-color: #30b87a; color: var(--g); }
+.al-b { background: var(--bb); border-color: #5090e0; color: var(--b); }
+
+/* FILTERS */
+.filters { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
+.filter { padding: 6px 13px; border-radius: 20px; border: 1px solid var(--border); background: none; font-size: 12px; cursor: pointer; color: var(--text2); font-family: inherit; }
+.filter.on { background: var(--accent); border-color: var(--accent); color: #f0ede8; font-weight: 500; }
+
+/* SECTION DIVIDERS */
+.divider { font-size: 10px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; color: var(--text3); padding: 10px 0 6px; border-top: 1px solid var(--border); margin-top: 4px; }
+.divider:first-child { border-top: none; padding-top: 0; margin-top: 0; }
+
+/* LINKS */
+.mon-link { display: inline-block; margin-top: 10px; font-size: 12px; color: var(--b); text-decoration: none; font-family: ui-monospace, monospace; }
+</style>
+</head>
+<body>
+
+<div class="hdr">
+  <div class="brand">DL Production</div>
+  <div>
+    <div class="live">
+      <span class="dot"></span>
+      <span class="live-txt">Monday Live</span>
+    </div>
+    <div class="updated" id="updated-time">עודכן: 06.05.2026</div>
+  </div>
+</div>
+
+<div class="search-bar">
+  <div class="search-inner">
+    <input type="search" id="q" placeholder="חיפוש SKU או שם דגם..." oninput="search(this.value)" />
+    <button class="x" id="xbtn" onclick="clearSearch()">✕</button>
+  </div>
+  <div class="search-results" id="search-results"></div>
+</div>
+
+<div class="nav" id="nav">
+  <button class="on" onclick="tab('dashboard', this)">דשבורד</button>
+  <button onclick="tab('production', this)">ייצור</button>
+  <button onclick="tab('shipments', this)">משלוחים</button>
+  <button onclick="tab('alerts', this)">התראות</button>
+</div>
+
+<div id="dashboard" class="page on"></div>
+<div id="production" class="page"></div>
+<div id="shipments" class="page"></div>
+<div id="alerts" class="page"></div>
+
+<script>
+// ─── DATA ───────────────────────────────────────────────────
+const P = [
+  {n:"Ring Belt Bag black",s:"375701OS",st:"ready for cutting",v:"",c:"",q:"20",ws:"",a:""},
+  {n:"rosa-wristlet-burgundy",s:"343830",st:"ready for cutting",v:"סעד",c:"FW26-27BAGS",q:"20",ws:"1",a:""},
+  {n:"Phoebe Mini Bag Pewter",s:"",st:"cutting",v:"",c:"repeat",q:"20",ws:"",a:""},
+  {n:"capri-crossbody-ice-croco",s:"319221",st:"cutting",v:"מורד",c:"SS26BAGS",q:"14",ws:"",a:""},
+  {n:"maya-tote-sigaro",s:"344310",st:"cutting",v:"ג'אווד",c:"FW26-27BAGS",q:"30",ws:"2",a:""},
+  {n:"maya-hobo-sigaro",s:"353011",st:"cutting",v:"ג'אווד",c:"FW26-27BAGS",q:"30",ws:"13",a:""},
+  {n:"maya-phone-pocket-sigaro",s:"354011",st:"cutting",v:"סעד",c:"FW26-27BAGS",q:"30",ws:"5",a:""},
+  {n:"Anita Mini Crossbody Bag b-w",s:"304901",st:"cutting",v:"",c:"",q:"30",ws:"",a:""},
+  {n:"amadeus-sling-large-bag-sigaro",s:"10320513",st:"cutting",v:"מורד",c:"FW26-27BAGS",q:"30",ws:"",a:""},
+  {n:"amadeus-sling-small-bag-sigaro",s:"103204C14OS",st:"cutting",v:"מורד",c:"FW26-27BAGS",q:"30",ws:"2",a:""},
+  {n:"nikita-small-canvas-bag-beige",s:"352580",st:"cutting",v:"ג'אווד",c:"FW26-27BAGS",q:"16",ws:"1",a:""},
+  {n:"nikita-small-canvas-bag-denim",s:"352520",st:"cutting",v:"ג'אווד",c:"FW26-27BAGS",q:"16",ws:"2",a:""},
+  {n:"nikita-large-canvas-bag-beige",s:"352480",st:"cutting",v:"ג'אווד",c:"FW26-27BAGS",q:"16",ws:"1",a:""},
+  {n:"nikita-large-canvas-bag-denim",s:"352420",st:"cutting",v:"ג'אווד",c:"FW26-27BAGS",q:"16",ws:"1",a:""},
+  {n:"rosa-wristlet-sigaro",s:"343811",st:"cutting",v:"סעד",c:"FW26-27BAGS",q:"30",ws:"15",a:""},
+  {n:"maya-tote-storm-grey",s:"344380",st:"cutting",v:"ג'אווד",c:"FW26-27BAGS",q:"",ws:"1",a:""},
+  {n:"amadeus-sling-large-bag-storm-grey",s:"10320581",st:"cutting",v:"מורד",c:"FW26-27BAGS",q:"",ws:"1",a:""},
+  {n:"amadeus-sling-small-bag-storm-grey",s:"103204182",st:"cutting",v:"מורד",c:"FW26-27BAGS",q:"",ws:"4",a:""},
+  {n:"maya-hobo-black",s:"353001",st:"waiting for material",v:"ג'אווד",c:"FW26-27BAGS",q:"30",ws:"2",a:""},
+  {n:"maya-tote-storm-grey",s:"344380",st:"waiting for material",v:"ג'אווד",c:"FW26-27BAGS",q:"20",ws:"",a:""},
+  {n:"maya-hobo-storm-grey",s:"353080",st:"waiting for material",v:"ג'אווד",c:"FW26-27BAGS",q:"20",ws:"",a:""},
+  {n:"Amadeus Sling Small Bag Black",s:"103204D52OS",st:"waiting for material",v:"",c:"",q:"20",ws:"3",a:""},
+  {n:"Amadeus Sling Large Bag black",s:"103205D52OS",st:"waiting for material",v:"",c:"",q:"20",ws:"",a:""},
+  {n:"amadeus-sling-large-bag-storm-grey",s:"10320581",st:"waiting for material",v:"מורד",c:"FW26-27BAGS",q:"20",ws:"",a:""},
+  {n:"amadeus-sling-small-bag-storm-grey",s:"103204182",st:"waiting for material",v:"מורד",c:"FW26-27BAGS",q:"20",ws:"",a:""},
+  {n:"maya-hobo-burgundy",s:"353030",st:"waiting for material",v:"ג'אווד",c:"FW26-27BAGS",q:"20",ws:"",a:""},
+  {n:"lorrie-clutch-ivory-chevron",s:"1017301901",st:"hardware",v:"",c:"",q:"19",ws:"",a:""},
+  {n:"lorrie-clutch-taupe-leopard",s:"1034227168",st:"hardware",v:"",c:"",q:"5",ws:"",a:""},
+  {n:"lorrie-clutch-silver-prism",s:"1034227952",st:"hardware",v:"",c:"",q:"5",ws:"",a:""},
+  {n:"lorrie-clutch-cognac-croco",s:"1034227167",st:"hardware",v:"",c:"",q:"18",ws:"",a:""},
+  {n:"lorrie-clutch-silver-facet",s:"1034227951",st:"hardware",v:"",c:"",q:"9",ws:"",a:""},
+  {n:"lorrie-clutch-midnight-stripe",s:"1017301201",st:"hardware",v:"",c:"",q:"13",ws:"",a:""},
+  {n:"lorrie-clutch-noir-metallic-croco",s:"1017301954",st:"hardware",v:"",c:"",q:"25",ws:"",a:""},
+  {n:"lorrie-clutch-toffee-pleats",s:"1034227107",st:"hardware",v:"",c:"",q:"10",ws:"",a:""},
+  {n:"lorrie-clutch-noir-croco-mix",s:"1034227107",st:"hardware",v:"",c:"",q:"20",ws:"",a:""},
+  {n:"Dallas soft tote charcoal",s:"349701",st:"hardware",v:"ג'וואד",c:"repeat",q:"3",ws:"",a:""},
+  {n:"lorrie-clutch-denim-croco",s:"1034227214",st:"hardware",v:"",c:"",q:"",ws:"",a:""},
+  {n:"Anita Mini Crossbody Bag sigaro",s:"304903",st:"production",v:"",c:"",q:"100",ws:"",a:""},
+  {n:"Dallas Contour Shoulder Bag charcoal",s:"340201",st:"production",v:"מורד",c:"repeat",q:"5",ws:"",a:"05.05"},
+  {n:"amadeus-sling-small-bag-sigaro",s:"103204C14OS",st:"production",v:"מורד",c:"SS26BAGS",q:"20",ws:"",a:"06.05"},
+  {n:"Rosa Clutch Black",s:"343801",st:"production",v:"",c:"repeat",q:"20",ws:"",a:""},
+  {n:"Rosa Clutch Pewter",s:"343895",st:"production",v:"",c:"repeat",q:"20",ws:"",a:""},
+  {n:"luna-crossbody-brown-snake",s:"308717",st:"production",v:"מורד",c:"SS26BAGS",q:"14",ws:"",a:"30.04"},
+  {n:"luna-crossbody-bubbles",s:"308780",st:"production",v:"מורד",c:"SS26BAGS",q:"13",ws:"",a:"30.04"},
+  {n:"capri-crossbody-white-scales",s:"319294",st:"production",v:"מורד",c:"SS26BAGS",q:"14",ws:"",a:"01.05"},
+  {n:"capri-envelope-combo-bubbles",s:"321095",st:"production",v:"מורד",c:"SS26BAGS",q:"20",ws:"",a:"01.05"},
+  {n:"ariella-tote-b&w-boho",s:"103113901",st:"production",v:"ג'אווד",c:"SS26BAGS",q:"9",ws:"",a:"01.05"},
+  {n:"heidi-baguette-dalmatian",s:"311308",st:"production",v:"ג'אווד",c:"SS26BAGS",q:"20",ws:"",a:"01.05"},
+  {n:"capri-clutch-dalmatian",s:"339904",st:"production",v:"מורד",c:"SS26BAGS",q:"20",ws:"",a:"01.05"},
+  {n:"capri-envelope-combo-straw",s:"321090",st:"production",v:"מורד",c:"SS26BAGS",q:"14",ws:"",a:"06.05"},
+  {n:"ariella-crossbody-b&w-boho",s:"103019301",st:"production",v:"מורד",c:"SS26BAGS",q:"14",ws:"",a:"06.05"},
+  {n:"capri-clutch-brown-snake",s:"339916",st:"production",v:"מורד",c:"SS26BAGS",q:"14",ws:"",a:"06.05"},
+  {n:"ariella-crossbody-blue-boho",s:"103019325",st:"production",v:"מורד",c:"SS26BAGS",q:"14",ws:"",a:"08.05"},
+  {n:"luna-crossbody-straw",s:"3087902",st:"production",v:"מורד",c:"SS26BAGS",q:"14",ws:"",a:"08.05"},
+  {n:"ariella-crossbody-green-boho",s:"103019377",st:"production",v:"מורד",c:"SS26BAGS",q:"10",ws:"",a:"08.05"},
+  {n:"lorrie-clutch-taupe-croco",s:"1034227159",st:"production",v:"ג'אווד",c:"",q:"8",ws:"",a:"09.05"},
+  {n:"lorrie-clutch-noir-ruffle",s:"1017301103",st:"production",v:"ג'אווד",c:"",q:"30",ws:"",a:"09.05"},
+  {n:"lorrie-clutch-steel-grid",s:"1034227976",st:"production",v:"ג'אווד",c:"",q:"12",ws:"",a:"09.05"},
+  {n:"lorrie-clutch-denim",s:"101730130",st:"production",v:"ג'וואד",c:"",q:"13",ws:"",a:"09.05"},
+  {n:"lorrie-clutch-graphite-croco",s:"1034227824",st:"production",v:"ג'אווד",c:"",q:"25",ws:"",a:"09.05"},
+  {n:"lorrie-clutch-white-prism",s:"1034227905",st:"production",v:"ג'וואד",c:"",q:"12",ws:"",a:"09.05"},
+  {n:"capri-crossbody-combo-straw",s:"354995",st:"production",v:"מורד",c:"SS26BAGS",q:"14",ws:"",a:"10.05"},
+  {n:"capri-envelope-combo-straw",s:"321091",st:"production",v:"מורד",c:"",q:"14",ws:"",a:"10.05"},
+  {n:"lorrie-clutch-olive-croco",s:"1034227701",st:"production",v:"ג'אווד",c:"",q:"11",ws:"",a:""},
+  {n:"lorrie-clutch-pinstripe-camel",s:"1034227133",st:"production",v:"",c:"",q:"10",ws:"",a:""},
+  {n:"rosa-wristlet-burgundy",s:"343830",st:"production",v:"סעד",c:"FW26-27BAGS",q:"",ws:"1",a:"13.05"},
+  {n:"maya-hobo-storm-grey",s:"353080",st:"production",v:"ג'אווד",c:"FW26-27BAGS",q:"",ws:"4",a:"15.05"},
+  {n:"maya-hobo-burgundy",s:"353030",st:"production",v:"ג'אווד",c:"FW26-27BAGS",q:"",ws:"1",a:"15.05"},
+  {n:"Anita Mini Crossbody Bag black",s:"304903",st:"production",v:"",c:"",q:"30",ws:"",a:""},
+  {n:"Austin Crossbody Bag",s:"331201",st:"prepare",v:"",c:"FW26-27BAGS",q:"100",ws:"",a:""},
+];
+
+const S = [
+  {n:"lily - ss26venus",sp:"Lily",co:"China",cat:"Bags",st:"on the way",b:"2026-05-02",wh:"",pr:"45714",pd:"22357",py:"Done"},
+  {n:"lily - tokyo SS26veganbags3",sp:"Lily",co:"China",cat:"Bags",st:"on the way",b:"2026-05-02",wh:"",pr:"15975",pd:"7988",py:"Done"},
+  {n:"lily - bonnie SS26bonnie3",sp:"Lily",co:"China",cat:"Bags",st:"on the way",b:"2026-05-02",wh:"",pr:"22587",pd:"9114",py:"Done"},
+  {n:"lily - bonnie case",sp:"Lily",co:"China",cat:"Accessories",st:"on the way",b:"2026-05-02",wh:"",pr:"3206",pd:"",py:"Done"},
+  {n:"Barone Texas black + sigaro",sp:"Barone",co:"Italy",cat:"Leather",st:"on the way",b:"2026-05-10",wh:"2026-05-17",pr:"25343",pd:"12671",py:"payment needed"},
+  {n:"Monica - FW25-26NUBUK - 1120 pcs",sp:"Monica",co:"China",cat:"Bags",st:"on the way",b:"2026-08-12",wh:"2026-08-19",pr:"40828",pd:"12248",py:"payment needed"},
+  {n:"srivathsa - vivian bucket - 250 pcs",sp:"Srivathsa",co:"France",cat:"Bags",st:"on the way",b:"2026-05-17",wh:"2026-05-24",pr:"21765",pd:"6529",py:"partially paid"},
+  {n:"anwar - ss26wallets1 - 2340 pcs",sp:"Anwar",co:"India",cat:"Wallets",st:"on the way",b:"2026-06-15",wh:"2026-06-22",pr:"18494",pd:"5548",py:"partially paid"},
+  {n:"lily - fw26-27frankie - 960 pcs",sp:"Lily",co:"China",cat:"Bags",st:"production",b:"2026-06-22",wh:"2026-06-29",pr:"19243",pd:"7697",py:"Done"},
+  {n:"lily fw26-27 bonnie1 - 2675 pcs",sp:"Lily",co:"China",cat:"Bags",st:"production",b:"2026-07-03",wh:"2026-07-10",pr:"62684",pd:"24989",py:"Done"},
+  {n:"Lily key chains 1300 pcs",sp:"Lily",co:"China",cat:"Accessories",st:"production",b:"2026-07-05",wh:"",pr:"3956",pd:"1582",py:"Done"},
+  {n:"Lily Bonnie baby - 400 pcs",sp:"Lily",co:"",cat:"Accessories",st:"production",b:"2026-07-05",wh:"",pr:"1451",pd:"",py:"Done"},
+  {n:"Monica - FW26-27Philly - 300 Pcs",sp:"Monica",co:"China",cat:"Bags",st:"production",b:"2026-07-15",wh:"2026-07-22",pr:"14629",pd:"4388",py:"payment needed"},
+  {n:"kelly FW26-27SHOES1 - 2566 pcs",sp:"Kelly",co:"China",cat:"Shoes",st:"production",b:"2026-08-02",wh:"",pr:"80938",pd:"16187",py:"payment needed"},
+  {n:"camalya SS26COLLAB - 292 hats",sp:"Camalya",co:"Denmark",cat:"Collab",st:"production",b:"2026-03-22",wh:"",pr:"7320",pd:"2196",py:"partially paid"},
+  {n:"Barone FW26-27",sp:"Barone",co:"Italy",cat:"Leather",st:"production",b:"2026-05-10",wh:"2026-05-17",pr:"",pd:"",py:"partially paid"},
+  {n:"Bopell SS27 samples",sp:"Bopell",co:"",cat:"Leather",st:"production",b:"2026-05-17",wh:"",pr:"",pd:"",py:"payment needed"},
+  {n:"kelly ss27 leather samples",sp:"Kelly",co:"",cat:"Leather",st:"production",b:"2026-05-31",wh:"",pr:"",pd:"",py:"payment needed"},
+  {n:"barone ss26",sp:"Barone",co:"",cat:"Leather",st:"production",b:"2026-05-31",wh:"",pr:"",pd:"",py:"payment needed"},
+  {n:"KARA fw26-27 papua leather",sp:"Kara",co:"",cat:"Leather",st:"production",b:"2026-05-17",wh:"",pr:"1767",pd:"",py:"payment needed"},
+  {n:"kelly fw26-27shoes2 samples",sp:"Kelly",co:"",cat:"Shoes",st:"production",b:"2026-05-18",wh:"",pr:"",pd:"",py:""},
+  {n:"Lily fw26-27capri - 860 pcs",sp:"Lily",co:"China",cat:"Bags",st:"waiting",b:"2026-08-02",wh:"2026-08-12",pr:"25723",pd:"",py:"payment needed"},
+  {n:"lily fw26-27 veganbags2 - 600 pcs",sp:"Lily",co:"China",cat:"Bags",st:"waiting",b:"2026-08-02",wh:"",pr:"14433",pd:"",py:"payment needed"},
+  {n:"rejib - samples from india",sp:"",co:"India",cat:"",st:"ready",b:"",wh:"",pr:"",pd:"",py:"Done"},
+  {n:"Lily fitting fw26-27 + samples",sp:"Lily",co:"",cat:"Fittings",st:"ready",b:"",wh:"",pr:"3718",pd:"3718",py:"Done"},
+  {n:"monfrini - new sauvage - 600 sqf",sp:"Monfrini",co:"Italy",cat:"Leather",st:"ordered",b:"2026-05-10",wh:"2026-05-17",pr:"1709",pd:"",py:""},
+];
+
+// ─── HELPERS ───────────────────────────────────────────────
+function money(n) {
+  const f = parseFloat(n);
+  return isNaN(f) ? '' : new Intl.NumberFormat('en-US', {maximumFractionDigits:0}).format(f);
+}
+function date(d) {
+  if (!d) return '';
+  const p = d.split('-');
+  return p.length === 3 ? p[2]+'.'+p[1] : d;
+}
+function bc(s) {
+  if (!s) return 'bz';
+  const l = s.toLowerCase();
+  if (l === 'on the way') return 'bt';
+  if (l.includes('cutting') && !l.includes('ready')) return 'bb';
+  if (l.includes('waiting') || l.includes('partial') || l.includes('deposit')) return 'ba';
+  if (l.includes('ready') || l === 'done' || l.includes('fully')) return 'bg';
+  if (l.includes('needed') || l.includes('stuck')) return 'br';
+  if (l.includes('production') || l.includes('working') || l.includes('ordered') || l.includes('prepare')) return 'bp';
+  return 'bz';
+}
+function hi(text, q) {
+  if (!text || !q) return text || '';
+  const i = text.toLowerCase().indexOf(q.toLowerCase());
+  if (i < 0) return text;
+  return text.slice(0,i) + '<mark style="background:#fde68a;border-radius:2px;padding:0 1px">' + text.slice(i,i+q.length) + '</mark>' + text.slice(i+q.length);
+}
+function join(...parts) { return parts.filter(Boolean).join(' · '); }
+
+// ─── TAB SWITCHING ─────────────────────────────────────────
+function tab(id, btn) {
+  document.querySelectorAll('.page').forEach(p => { p.classList.remove('on'); });
+  document.querySelectorAll('.nav button').forEach(b => b.classList.remove('on'));
+  document.getElementById(id).classList.add('on');
+  btn.classList.add('on');
+}
+
+// ─── SEARCH ────────────────────────────────────────────────
+function search(raw) {
+  const q = raw.trim();
+  const xbtn = document.getElementById('xbtn');
+  const results = document.getElementById('search-results');
+  const nav = document.getElementById('nav');
+
+  xbtn.style.display = q ? 'block' : 'none';
+
+  if (!q) {
+    results.style.display = 'none';
+    results.innerHTML = '';
+    nav.style.display = 'flex';
+    document.querySelectorAll('.page').forEach(p => { p.style.display = p.classList.contains('on') ? 'block' : 'none'; });
+    return;
+  }
+
+  nav.style.display = 'none';
+  document.querySelectorAll('.page').forEach(p => { p.style.display = 'none'; });
+  results.style.display = 'block';
+
+  const ql = q.toLowerCase();
+  const ph = P.filter(i =>
+    (i.s||'').toLowerCase().includes(ql) ||
+    (i.n||'').toLowerCase().includes(ql) ||
+    (i.c||'').toLowerCase().includes(ql) ||
+    (i.v||'').toLowerCase().includes(ql)
+  );
+  const sh = S.filter(i =>
+    (i.n||'').toLowerCase().includes(ql) ||
+    (i.sp||'').toLowerCase().includes(ql) ||
+    (i.cat||'').toLowerCase().includes(ql)
+  );
+
+  if (!ph.length && !sh.length) {
+    results.innerHTML = '<div class="no-res">לא נמצאו תוצאות עבור "' + q + '"</div>';
+    return;
+  }
+
+  let html = '';
+
+  if (ph.length) {
+    html += '<div class="src-label">ייצור — ' + ph.length + ' תוצאות</div>';
+    ph.forEach(i => {
+      html += '<div class="res-item">'
+        + '<div class="res-name">' + hi(i.n, q) + '</div>'
+        + (i.s ? '<div class="res-sku">SKU: ' + hi(i.s, q) + '</div>' : '')
+        + '<div class="res-meta">'
+        + join(i.v ? 'יצרן: '+i.v : '', i.q ? 'מקומי: '+i.q+' יח\'' : '', i.ws ? 'WS: '+i.ws : '', i.a ? 'צפי: '+i.a : '')
+        + '</div>'
+        + '<div class="res-tags"><span class="badge ' + bc(i.st) + '">' + i.st + '</span>'
+        + (i.c ? '<span class="badge bp">' + i.c + '</span>' : '')
+        + '</div></div>';
+    });
+  }
+
+  if (sh.length) {
+    if (ph.length) html += '<div style="height:8px"></div>';
+    html += '<div class="src-label">משלוחים — ' + sh.length + ' תוצאות</div>';
+    sh.forEach(i => {
+      const arr = i.wh || i.b;
+      const t = parseFloat(i.pr||0), pd = parseFloat(i.pd||0), bal = t - pd;
+      html += '<div class="res-item">'
+        + '<div class="res-name">' + hi(i.n, q) + '</div>'
+        + '<div class="res-meta">'
+        + join(i.sp ? 'ספק: '+i.sp : '', i.co, i.cat)
+        + (arr ? '<br>הגעה: ' + date(arr) : '')
+        + (i.pr ? ' · $' + money(i.pr) : '')
+        + (bal > 1 && i.py === 'payment needed' ? ' · יתרה: $' + money(bal) : '')
+        + '</div>'
+        + '<div class="res-tags"><span class="badge ' + bc(i.st) + '">' + i.st + '</span>'
+        + (i.py ? '<span class="badge ' + bc(i.py) + '">' + i.py + '</span>' : '')
+        + '</div></div>';
+    });
+  }
+
+  results.innerHTML = html;
+}
+
+function clearSearch() {
+  const input = document.getElementById('q');
+  input.value = '';
+  search('');
+  input.focus();
+}
+
+// ─── RENDER DASHBOARD ──────────────────────────────────────
+function renderDashboard() {
+  const cutting = P.filter(i => i.st === 'cutting').length;
+  const waiting = P.filter(i => i.st === 'waiting for material').length;
+  const onway = S.filter(i => i.st === 'on the way').length;
+  const payN = S.filter(i => i.py === 'payment needed' && parseFloat(i.pr||0) > 3000).length;
+
+  const payAlert = S.filter(i => i.py === 'payment needed' && parseFloat(i.pr||0) > 3000)
+    .sort((a,b) => parseFloat(b.pr||0) - parseFloat(a.pr||0)).slice(0,4);
+  const onwaySorted = S.filter(i => i.st === 'on the way')
+    .sort((a,b) => (a.b||'9').localeCompare(b.b||'9')).slice(0,5);
+  const cuttingNow = P.filter(i => i.st === 'cutting').slice(0,5);
+
+  let h = '<div class="stats">'
+    + '<div class="stat"><div class="stat-val" style="color:#4a1f8a">' + P.length + '</div><div class="stat-lbl">פריטים בייצור</div></div>'
+    + '<div class="stat"><div class="stat-val" style="color:#0d5a48">' + onway + '</div><div class="stat-lbl">משלוחים בדרך</div></div>'
+    + '<div class="stat"><div class="stat-val" style="color:#8a3e0a">' + waiting + '</div><div class="stat-lbl">ממתינים לחומר</div></div>'
+    + '<div class="stat"><div class="stat-val" style="color:#8f1f1f">' + payN + '</div><div class="stat-lbl">תשלומים דחופים</div></div>'
+    + '</div>';
+
+  if (payAlert.length) {
+    h += '<div class="card"><div class="card-title">תשלומים דחופים</div>';
+    payAlert.forEach(i => {
+      const t = parseFloat(i.pr||0), pd = parseFloat(i.pd||0), bal = t - pd;
+      h += '<div class="item"><div class="item-left">'
+        + '<div class="item-name">' + i.n + '</div>'
+        + '<div class="item-sub">' + join(i.co, i.cat, i.sp) + '</div>'
+        + '<div class="tags"><span class="badge br">תשלום נדרש</span>'
+        + (bal > 0 ? '<span class="badge bz">יתרה: $' + money(bal) + '</span>' : '')
+        + (i.b ? '<span class="badge ba">' + date(i.b) + '</span>' : '')
+        + '</div></div></div>';
+    });
+    h += '</div>';
+  }
+
+  if (onwaySorted.length) {
+    h += '<div class="card"><div class="card-title">בדרך — לפי תאריך הגעה</div>';
+    onwaySorted.forEach(i => {
+      const arr = i.wh || i.b;
+      h += '<div class="item"><div class="item-left">'
+        + '<div class="item-name">' + i.n + '</div>'
+        + '<div class="item-sub">' + join(i.co, i.cat) + '</div>'
+        + '<div class="tags"><span class="badge bt">בדרך</span>'
+        + (arr ? '<span class="badge bz">' + date(arr) + '</span>' : '')
+        + (i.pr ? '<span class="badge bz">$' + money(i.pr) + '</span>' : '')
+        + (i.py ? '<span class="badge ' + bc(i.py) + '">' + i.py + '</span>' : '')
+        + '</div></div></div>';
+    });
+    h += '<a class="mon-link" href="https://daniellalehavi.monday.com/boards/1419615489" target="_blank">בורד ספקי חול ↗</a></div>';
+  }
+
+  if (cuttingNow.length) {
+    h += '<div class="card"><div class="card-title">בגזירה עכשיו (' + cutting + ' פריטים)</div>';
+    cuttingNow.forEach(i => {
+      h += '<div class="item"><div class="item-left">'
+        + '<div class="item-name">' + i.n + '</div>'
+        + '<div class="item-sub">' + join(i.s, i.v) + '</div>'
+        + '<div class="tags"><span class="badge bb">גזירה</span>'
+        + (i.c ? '<span class="badge bp">' + i.c + '</span>' : '')
+        + '</div></div>'
+        + '<div class="item-right"><div class="item-qty">' + (i.q ? i.q+' יח\'' : '') + '</div></div>'
+        + '</div>';
+    });
+    h += '<a class="mon-link" href="https://daniellalehavi.monday.com/boards/633119005" target="_blank">בורד ייצור ↗</a></div>';
+  }
+
+  document.getElementById('dashboard').innerHTML = h;
+}
+
+// ─── RENDER PRODUCTION ─────────────────────────────────────
+function renderProduction() {
+  const groups = {
+    'cutting':              { label: 'בגזירה', items: [] },
+    'waiting for material': { label: 'ממתינים לחומרי גלם', items: [] },
+    'ready for cutting':    { label: 'מוכן לגזירה', items: [] },
+    'hardware':             { label: 'חומרה / אביזרים', items: [] },
+    'production':           { label: 'בייצור', items: [] },
+    'prepare':              { label: 'הכנה לייצור', items: [] },
+  };
+  P.forEach(i => { (groups[i.st] || groups['production']).items.push(i); });
+
+  const cut = groups['cutting'].items.length;
+  const wait = groups['waiting for material'].items.length;
+
+  let h = '<div class="filters">'
+    + '<button class="filter on" onclick="filterProd(\'all\',this)">הכל (' + P.length + ')</button>'
+    + '<button class="filter" onclick="filterProd(\'cutting\',this)">גזירה (' + cut + ')</button>'
+    + '<button class="filter" onclick="filterProd(\'waiting for material\',this)">ממתין (' + wait + ')</button>'
+    + '<button class="filter" onclick="filterProd(\'hardware\',this)">חומרה</button>'
+    + '<button class="filter" onclick="filterProd(\'production\',this)">ייצור</button>'
+    + '</div><div class="card" id="prod-list">';
+
+  Object.entries(groups).forEach(([key, g]) => {
+    if (!g.items.length) return;
+    h += '<div class="divider" data-gk="' + key + '">' + g.label + ' — ' + g.items.length + '</div>';
+    g.items.forEach(i => {
+      h += '<div class="item" data-f="' + key + '">'
+        + '<div class="item-left">'
+        + '<div class="item-name">' + i.n + '</div>'
+        + '<div class="item-sub">' + join(i.s, i.v) + '</div>'
+        + '<div class="tags"><span class="badge ' + bc(i.st) + '">' + i.st + '</span>'
+        + (i.c ? '<span class="badge bp">' + i.c + '</span>' : '')
+        + (i.ws ? '<span class="badge bz">WS: ' + i.ws + '</span>' : '')
+        + '</div></div>'
+        + '<div class="item-right">'
+        + '<div class="item-qty">' + (i.q ? i.q+' יח\'' : '') + '</div>'
+        + (i.a ? '<div class="item-date">' + i.a + '</div>' : '')
+        + '</div></div>';
+    });
+  });
+
+  h += '</div><a class="mon-link" href="https://daniellalehavi.monday.com/boards/633119005" target="_blank">פתח בורד ייצור ↗</a>';
+  document.getElementById('production').innerHTML = h;
+}
+
+function filterProd(f, btn) {
+  document.querySelectorAll('#production .filter').forEach(b => b.classList.remove('on'));
+  btn.classList.add('on');
+  document.querySelectorAll('#prod-list .item').forEach(r => {
+    r.style.display = (f === 'all' || r.dataset.f === f) ? 'flex' : 'none';
+  });
+  document.querySelectorAll('#prod-list .divider').forEach(d => {
+    d.style.display = (f === 'all' || d.dataset.gk === f) ? 'block' : 'none';
+  });
+}
+
+// ─── RENDER SHIPMENTS ──────────────────────────────────────
+function renderShipments() {
+  const onway = S.filter(i => i.st === 'on the way').sort((a,b) => (a.b||'9').localeCompare(b.b||'9'));
+  const inprod = S.filter(i => i.st === 'production').sort((a,b) => (a.b||'9').localeCompare(b.b||'9'));
+  const other = S.filter(i => !['on the way','production'].includes(i.st));
+
+  function shipRow(i) {
+    const arr = i.wh || i.b;
+    const t = parseFloat(i.pr||0), pd = parseFloat(i.pd||0), bal = t - pd;
+    return '<div class="item" data-f="' + i.st + '">'
+      + '<div class="item-left">'
+      + '<div class="item-name">' + i.n + '</div>'
+      + '<div class="item-sub">' + join(i.co, i.cat, i.sp) + '</div>'
+      + '<div class="tags"><span class="badge ' + bc(i.st) + '">' + i.st + '</span>'
+      + (arr ? '<span class="badge bz">' + date(arr) + '</span>' : '')
+      + (i.pr ? '<span class="badge bz">$' + money(i.pr) + '</span>' : '')
+      + (i.py ? '<span class="badge ' + bc(i.py) + '">' + i.py + '</span>' : '')
+      + (bal > 1 && i.py === 'payment needed' ? '<span class="badge br">יתרה: $' + money(bal) + '</span>' : '')
+      + '</div></div></div>';
+  }
+
+  let h = '<div class="filters">'
+    + '<button class="filter on" onclick="filterShip(\'all\',this)">הכל (' + S.length + ')</button>'
+    + '<button class="filter" onclick="filterShip(\'on the way\',this)">בדרך (' + onway.length + ')</button>'
+    + '<button class="filter" onclick="filterShip(\'production\',this)">ייצור (' + inprod.length + ')</button>'
+    + '<button class="filter" onclick="filterShip(\'pay\',this)">תשלום נדרש</button>'
+    + '</div><div class="card" id="ship-list">';
+
+  if (onway.length) { h += '<div class="divider">בדרך — ' + onway.length + '</div>'; onway.forEach(i => h += shipRow(i)); }
+  if (inprod.length) { h += '<div class="divider">בייצור — ' + inprod.length + '</div>'; inprod.forEach(i => h += shipRow(i)); }
+  if (other.length) { h += '<div class="divider">אחר — ' + other.length + '</div>'; other.forEach(i => h += shipRow(i)); }
+
+  h += '</div><a class="mon-link" href="https://daniellalehavi.monday.com/boards/1419615489" target="_blank">פתח בורד ספקי חול ↗</a>';
+  document.getElementById('shipments').innerHTML = h;
+}
+
+function filterShip(f, btn) {
+  document.querySelectorAll('#shipments .filter').forEach(b => b.classList.remove('on'));
+  btn.classList.add('on');
+  document.querySelectorAll('#ship-list .item').forEach(r => {
+    if (f === 'all') { r.style.display = 'flex'; return; }
+    if (f === 'pay') { r.style.display = r.innerHTML.includes('payment needed') ? 'flex' : 'none'; return; }
+    r.style.display = r.dataset.f === f ? 'flex' : 'none';
+  });
+}
+
+// ─── RENDER ALERTS ─────────────────────────────────────────
+function renderAlerts() {
+  const payU = S.filter(i => i.py === 'payment needed' && parseFloat(i.pr||0) > 3000)
+    .sort((a,b) => parseFloat(b.pr||0) - parseFloat(a.pr||0));
+  const waiting = P.filter(i => i.st === 'waiting for material');
+  const soon = S.filter(i => i.st === 'on the way' && i.b).sort((a,b) => a.b.localeCompare(b.b)).slice(0,3);
+  const cut = P.filter(i => i.st === 'cutting');
+
+  let h = '';
+
+  payU.forEach(i => {
+    const t = parseFloat(i.pr||0), pd = parseFloat(i.pd||0), bal = t - pd;
+    h += '<div class="alert al-r">'
+      + '<div class="alert-title">תשלום נדרש — ' + i.sp + '</div>'
+      + '<div class="alert-body">' + i.n + ' · $' + money(t)
+      + (bal > 0 ? ' · יתרה: $' + money(bal) : '')
+      + (i.b ? ' · הגעה: ' + date(i.b) : '')
+      + '</div></div>';
+  });
+
+  if (waiting.length) {
+    h += '<div class="alert al-a">'
+      + '<div class="alert-title">' + waiting.length + ' פריטים ממתינים לחומרי גלם</div>'
+      + '<div class="alert-body">' + waiting.slice(0,4).map(i => i.n).join(', ')
+      + (waiting.length > 4 ? ' +' + (waiting.length-4) + ' נוספים' : '')
+      + '</div></div>';
+  }
+
+  soon.forEach(i => {
+    h += '<div class="alert al-g">'
+      + '<div class="alert-title">מגיע בקרוב — ' + i.n + '</div>'
+      + '<div class="alert-body">' + join(i.co, date(i.b)) + (i.wh ? ' · WH: ' + date(i.wh) : '') + '</div></div>';
+  });
+
+  if (cut.length) {
+    h += '<div class="alert al-b">'
+      + '<div class="alert-title">' + cut.length + ' פריטים בגזירה</div>'
+      + '<div class="alert-body">' + cut.slice(0,5).map(i => i.n).join(', ') + '</div></div>';
+  }
+
+  if (!h) h = '<div class="alert al-g"><div class="alert-title">אין התראות פעילות ✓</div></div>';
+  document.getElementById('alerts').innerHTML = h;
+}
+
+// ─── INIT ──────────────────────────────────────────────────
+renderDashboard();
+renderProduction();
+renderShipments();
+renderAlerts();
+</script>
+</body>
+</html>
