@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="apple-mobile-web-app-title" content="DL Production">
+<title>DL Production</title>
+<style>
+:root{--bg:#f5f3ef;--surface:#fff;--border:#e8e4de;--text:#1a1714;--text2:#6b6560;--text3:#9c9590;--accent:#1e1c18;--g:#2a6048;--gb:#e8f2ec;--a:#8a3e0a;--ab:#fdf0e0;--r:#8f1f1f;--rb:#fce8e8;--b:#1a3f7a;--bb:#e8f0fa;--p:#4a1f8a;--pb:#f0ebfa;--t:#0d5a48;--tb:#e0f0eb}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);font-size:15px}
+.hdr{background:var(--accent);color:#f0ede8;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+.brand{font-size:13px;font-weight:600;letter-spacing:2.5px;text-transform:uppercase}
+.hdr-right{display:flex;align-items:center;gap:10px}
+.live{display:flex;align-items:center;gap:5px}
+.dot{width:7px;height:7px;border-radius:50%;background:#1D9E75;animation:pulse 2s infinite}
+.dot.loading{background:#EF9F27;animation:spin 1s linear infinite}
+.dot.error{background:#E24B4A;animation:none}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+@keyframes spin{to{transform:rotate(360deg)}}
+.live-txt{font-size:11px;color:#8ecfbb}
+.live-txt.loading{color:#fac775}
+.live-txt.error{color:#f09595}
+.refresh-btn{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);color:#f0ede8;padding:5px 11px;border-radius:6px;font-size:12px;cursor:pointer;font-family:inherit}
+.refresh-btn:disabled{opacity:.4;cursor:not-allowed}
+.updated{font-size:10px;color:rgba(255,255,255,.4);margin-top:2px;font-family:ui-monospace,monospace}
+
+.search-bar{background:var(--surface);border-bottom:1px solid var(--border);padding:10px 14px}
+.search-inner{display:flex;align-items:center;background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:0 12px}
+.search-inner input{flex:1;padding:9px 0;border:none;background:none;font-size:14px;color:var(--text);outline:none}
+.search-inner input::placeholder{color:var(--text3)}
+.xbtn{background:none;border:none;color:var(--text3);font-size:16px;cursor:pointer;padding:4px;display:none}
+.sres{margin-top:10px;display:none}
+.src-lbl{font-size:10px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--text3);padding-bottom:6px;margin-bottom:6px;border-bottom:1px solid var(--border)}
+.res-item{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:11px 13px;margin-bottom:7px}
+.res-name{font-size:13px;font-weight:600;margin-bottom:3px}
+.res-sku{font-size:11px;font-family:ui-monospace,monospace;color:var(--text2);margin-bottom:5px}
+.res-meta{font-size:12px;color:var(--text2);line-height:1.6}
+.res-tags{display:flex;gap:4px;flex-wrap:wrap;margin-top:7px}
+.no-res{text-align:center;padding:24px;font-size:13px;color:var(--text2)}
+
+.nav{background:var(--surface);border-bottom:1px solid var(--border);display:flex}
+.nav button{flex:1;padding:12px 4px;font-size:12px;font-weight:500;background:none;border:none;border-bottom:2px solid transparent;cursor:pointer;color:var(--text2);font-family:inherit}
+.nav button.on{border-bottom-color:var(--accent);color:var(--accent);font-weight:600}
+
+.page{display:none;padding:14px}
+.page.on{display:block}
+
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
+.stat{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px 14px}
+.stat-val{font-size:26px;font-weight:300;line-height:1;margin-bottom:4px}
+.stat-lbl{font-size:11px;color:var(--text2);line-height:1.3}
+
+.card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:12px}
+.card-title{font-size:10px;font-weight:600;letter-spacing:1.2px;text-transform:uppercase;color:var(--text3);margin-bottom:12px}
+
+.item{display:flex;align-items:flex-start;justify-content:space-between;padding:11px 0;border-bottom:1px solid var(--border);gap:10px}
+.item:last-child{border-bottom:none;padding-bottom:0}
+.item-left{flex:1;min-width:0}
+.item-name{font-size:13px;font-weight:600;line-height:1.3;margin-bottom:3px}
+.item-sub{font-size:12px;color:var(--text2)}
+.item-right{flex-shrink:0;text-align:left}
+.item-qty{font-size:12px;font-family:ui-monospace,monospace;color:var(--text2)}
+.item-date{font-size:11px;color:var(--text3);margin-top:3px;font-family:ui-monospace,monospace}
+.tags{display:flex;gap:4px;flex-wrap:wrap;margin-top:6px}
+
+.badge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:500}
+.bg{background:var(--gb);color:var(--g)}.ba{background:var(--ab);color:var(--a)}.br{background:var(--rb);color:var(--r)}.bb{background:var(--bb);color:var(--b)}.bp{background:var(--pb);color:var(--p)}.bt{background:var(--tb);color:var(--t)}.bz{background:#f0ede8;color:var(--text2)}
+
+.alert{border-radius:8px;padding:12px 14px;margin-bottom:9px;border-left:3px solid}
+.alert-title{font-size:13px;font-weight:600;margin-bottom:3px}
+.alert-body{font-size:12px;line-height:1.5}
+.al-r{background:var(--rb);border-color:#e05050;color:var(--r)}.al-a{background:var(--ab);border-color:#e8960a;color:var(--a)}.al-g{background:var(--gb);border-color:#30b87a;color:var(--g)}.al-b{background:var(--bb);border-color:#5090e0;color:var(--b)}
+
+.filters{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.filter{padding:6px 13px;border-radius:20px;border:1px solid var(--border);background:none;font-size:12px;cursor:pointer;color:var(--text2);font-family:inherit}
+.filter.on{background:var(--accent);border-color:var(--accent);color:#f0ede8;font-weight:500}
+
+.divider{font-size:10px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--text3);padding:10px 0 6px;border-top:1px solid var(--border);margin-top:4px}
+.divider:first-child{border-top:none;padding-top:0;margin-top:0}
+
+.mon-link{display:inline-block;margin-top:10px;font-size:12px;color:var(--b);text-decoration:none;font-family:ui-monospace,monospace}
+
+.loading-screen{text-align:center;padding:60px 20px;color:var(--text2)}
+.spinner{width:28px;height:28px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 14px}
+.loading-txt{font-size:13px;font-family:ui-monospace,monospace}
+.error-box{background:var(--rb);border:1px solid #f09595;border-radius:12px;padding:20px;text-align:center;margin:14px}
+.error-title{font-weight:600;color:var(--r);margin-bottom:8px}
+.error-sub{font-size:12px;color:var(--text2);margin-bottom:14px;line-height:1.6}
+.retry-btn{background:var(--accent);color:#f0ede8;border:none;padding:9px 22px;border-radius:8px;font-size:13px;cursor:pointer;font-family:inherit;font-weight:500}
+</style>
+</head>
+<body>
+
+<div class="hdr">
+  <div class="brand">DL Production</div>
+  <div class="hdr-right">
+    <div>
+      <div class="live">
+        <span class="dot" id="dot"></span>
+        <span class="live-txt" id="live-txt">טוען...</span>
+      </div>
+      <div class="updated" id="updated"></div>
+    </div>
+    <button class="refresh-btn" id="refresh-btn" onclick="loadAll()" disabled>רענן</button>
+  </div>
+</div>
+
+<div class="search-bar">
+  <div class="search-inner">
+    <input type="search" id="q" placeholder="חיפוש SKU או שם דגם..." oninput="doSearch(this.value)" />
+    <button class="xbtn" id="xbtn" onclick="clearSearch()">✕</button>
+  </div>
+  <div class="sres" id="sres"></div>
+</div>
+
+<div class="nav" id="nav">
+  <button class="on" onclick="tab('dashboard',this)">דשבורד</button>
+  <button onclick="tab('production',this)">ייצור</button>
+  <button onclick="tab('shipments',this)">משלוחים</button>
+  <button onclick="tab('alerts',this)">התראות</button>
+</div>
+
+<div id="dashboard" class="page on"></div>
+<div id="production" class="page"></div>
+<div id="shipments" class="page"></div>
+<div id="alerts" class="page"></div>
+
+<script>
+const PROD_BOARD = 633119005;
+const SHIP_BOARD = 1419615489;
+let PROD = [], SHIP = [];
+
+// ── API ──────────────────────────────────────────────────────
+async function monday(query) {
+  const res = await fetch('/api/monday', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ query })
+  });
+  if (!res.ok) throw new Error('שגיאת שרת ' + res.status);
+  const data = await res.json();
+  if (data.errors) throw new Error(data.errors[0]?.message || 'Monday API error');
+  return data;
+}
+
+async function fetchBoard(boardId, colIds) {
+  const cols = colIds.map(c => '"' + c + '"').join(',');
+  const q = `{ boards(ids: ${boardId}) { items_page(limit: 200) { items { id name column_values(ids: [${cols}]) { id text } } } } }`;
+  const data = await monday(q);
+  return data?.data?.boards?.[0]?.items_page?.items || [];
+}
+
+function cv(item, id) {
+  return item.column_values?.find(c => c.id === id)?.text || '';
+}
+
+// ── LOAD DATA ────────────────────────────────────────────────
+async function loadAll() {
+  const btn = document.getElementById('refresh-btn');
+  const dot = document.getElementById('dot');
+  const liveTxt = document.getElementById('live-txt');
+
+  btn.disabled = true;
+  dot.className = 'dot loading';
+  liveTxt.className = 'live-txt loading';
+  liveTxt.textContent = 'מתעדכן...';
+  showLoading();
+
+  try {
+    const [prodRaw, shipRaw] = await Promise.all([
+      fetchBoard(PROD_BOARD, ['status','text7','dropdown__1','dup__of_status','__________________','numbers1','date_mkkf1a2c']),
+      fetchBoard(SHIP_BOARD, ['status','supplier__1','country','date6','date_mm2wp8h5','numbers','numeric_mkxrznmz','status_10','status_2__1'])
+    ]);
+
+    PROD = prodRaw
+      .map(i => ({
+        id: i.id, n: i.name,
+        st: cv(i,'status'), s: cv(i,'text7'), v: cv(i,'dropdown__1'),
+        c: cv(i,'dup__of_status'), q: cv(i,'__________________'),
+        ws: cv(i,'numbers1'), a: fmtDate(cv(i,'date_mkkf1a2c'))
+      }))
+      .filter(i => i.st);
+
+    const activeStatuses = ['on the way','production','ready waiting shipment','working on it','ordered','deposit paid','arrived not paid yet','waiting supplier pi'];
+    SHIP = shipRaw
+      .map(i => ({
+        id: i.id, n: i.name,
+        st: cv(i,'status'), sp: cv(i,'supplier__1'), co: cv(i,'country'),
+        cat: cv(i,'status_2__1'), b: cv(i,'date6'), wh: cv(i,'date_mm2wp8h5'),
+        pr: cv(i,'numbers'), pd: cv(i,'numeric_mkxrznmz'), py: cv(i,'status_10')
+      }))
+      .filter(i => activeStatuses.some(s => (i.st||'').toLowerCase().includes(s)));
+
+    const now = new Date().toLocaleTimeString('he-IL', {hour:'2-digit', minute:'2-digit'});
+    document.getElementById('updated').textContent = 'עודכן: ' + now;
+    dot.className = 'dot';
+    liveTxt.className = 'live-txt';
+    liveTxt.textContent = 'Monday Live';
+
+    renderAll();
+  } catch (err) {
+    dot.className = 'dot error';
+    liveTxt.className = 'live-txt error';
+    liveTxt.textContent = 'שגיאה';
+    showError(err.message);
+  }
+
+  btn.disabled = false;
+}
+
+// ── HELPERS ──────────────────────────────────────────────────
+function money(n) { const f = parseFloat(n); return isNaN(f) ? '' : new Intl.NumberFormat('en-US',{maximumFractionDigits:0}).format(f); }
+function fmtDate(d) { if (!d) return ''; const p = d.split('-'); return p.length===3 ? p[2]+'.'+p[1] : d; }
+function bc(s) {
+  if (!s) return 'bz'; const l = s.toLowerCase();
+  if (l === 'on the way') return 'bt';
+  if (l.includes('cutting') && !l.includes('ready')) return 'bb';
+  if (l.includes('waiting') || l.includes('partial') || l.includes('deposit')) return 'ba';
+  if (l.includes('ready') || l === 'done' || l.includes('fully')) return 'bg';
+  if (l.includes('needed') || l.includes('stuck')) return 'br';
+  if (l.includes('production') || l.includes('working') || l.includes('ordered') || l.includes('prepare')) return 'bp';
+  return 'bz';
+}
+function hi(text, q) {
+  if (!text||!q) return text||'';
+  const i = text.toLowerCase().indexOf(q.toLowerCase());
+  if (i<0) return text;
+  return text.slice(0,i)+'<mark style="background:#fde68a;border-radius:2px;padding:0 1px">'+text.slice(i,i+q.length)+'</mark>'+text.slice(i+q.length);
+}
+function join(...parts) { return parts.filter(Boolean).join(' · '); }
+
+// ── TABS ─────────────────────────────────────────────────────
+function tab(id, btn) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('on'));
+  document.querySelectorAll('.nav button').forEach(b => b.classList.remove('on'));
+  document.getElementById(id).classList.add('on');
+  btn.classList.add('on');
+}
+
+// ── SEARCH ───────────────────────────────────────────────────
+function doSearch(raw) {
+  const q = raw.trim();
+  document.getElementById('xbtn').style.display = q ? 'block' : 'none';
+  const res = document.getElementById('sres');
+  const nav = document.getElementById('nav');
+  if (!q) {
+    res.style.display = 'none'; res.innerHTML = '';
+    nav.style.display = 'flex';
+    document.querySelectorAll('.page').forEach(p => { p.style.display = p.classList.contains('on') ? 'block' : 'none'; });
+    return;
+  }
+  nav.style.display = 'none';
+  document.querySelectorAll('.page').forEach(p => { p.style.display = 'none'; });
+  res.style.display = 'block';
+  const ql = q.toLowerCase();
+  const ph = PROD.filter(i => (i.s||'').toLowerCase().includes(ql)||(i.n||'').toLowerCase().includes(ql)||(i.c||'').toLowerCase().includes(ql)||(i.v||'').toLowerCase().includes(ql));
+  const sh = SHIP.filter(i => (i.n||'').toLowerCase().includes(ql)||(i.sp||'').toLowerCase().includes(ql)||(i.cat||'').toLowerCase().includes(ql));
+  if (!ph.length && !sh.length) { res.innerHTML = '<div class="no-res">לא נמצאו תוצאות עבור "'+q+'"</div>'; return; }
+  let html = '';
+  if (ph.length) {
+    html += '<div class="src-lbl">ייצור — '+ph.length+' תוצאות</div>';
+    ph.forEach(i => { html += '<div class="res-item"><div class="res-name">'+hi(i.n,q)+'</div>'+(i.s?'<div class="res-sku">SKU: '+hi(i.s,q)+'</div>':'')+'<div class="res-meta">'+join(i.v?'יצרן: '+i.v:'',i.q?'מקומי: '+i.q+' יח\'':'',i.ws?'WS: '+i.ws:'',i.a?'צפי: '+i.a:'')+'</div><div class="res-tags"><span class="badge '+bc(i.st)+'">'+i.st+'</span>'+(i.c?'<span class="badge bp">'+i.c+'</span>':'')+'</div></div>'; });
+  }
+  if (sh.length) {
+    if (ph.length) html += '<div style="height:8px"></div>';
+    html += '<div class="src-lbl">משלוחים — '+sh.length+' תוצאות</div>';
+    sh.forEach(i => { const arr=i.wh||i.b,t=parseFloat(i.pr||0),pd=parseFloat(i.pd||0),bal=t-pd; html += '<div class="res-item"><div class="res-name">'+hi(i.n,q)+'</div><div class="res-meta">'+join(i.sp?'ספק: '+i.sp:'',i.co,i.cat)+(arr?'<br>הגעה: '+fmtDate(arr):'')+(i.pr?' · $'+money(i.pr):'')+(bal>1&&i.py==='payment needed'?' · יתרה: $'+money(bal):'')+'</div><div class="res-tags"><span class="badge '+bc(i.st)+'">'+i.st+'</span>'+(i.py?'<span class="badge '+bc(i.py)+'">'+i.py+'</span>':'')+'</div></div>'; });
+  }
+  res.innerHTML = html;
+}
+
+function clearSearch() { const inp=document.getElementById('q'); inp.value=''; doSearch(''); inp.focus(); }
+
+// ── LOADING / ERROR ──────────────────────────────────────────
+function showLoading() {
+  const l = '<div class="loading-screen"><div class="spinner"></div><div class="loading-txt">שולף נתונים מ-Monday...</div></div>';
+  ['dashboard','production','shipments','alerts'].forEach(id => { document.getElementById(id).innerHTML = l; });
+}
+
+function showError(msg) {
+  document.getElementById('dashboard').innerHTML = '<div class="error-box"><div class="error-title">שגיאה בחיבור ל-Monday</div><div class="error-sub">'+msg+'<br><br>ודאי שה-MONDAY_TOKEN מוגדר נכון ב-Vercel.</div><button class="retry-btn" onclick="loadAll()">נסי שוב</button></div>';
+}
+
+// ── RENDER ALL ───────────────────────────────────────────────
+function renderAll() {
+  renderDashboard();
+  renderProduction();
+  renderShipments();
+  renderAlerts();
+}
+
+function renderDashboard() {
+  const cutting = PROD.filter(i=>i.st==='cutting').length;
+  const waiting = PROD.filter(i=>i.st==='waiting for material').length;
+  const onway = SHIP.filter(i=>i.st==='on the way').length;
+  const payN = SHIP.filter(i=>i.py==='payment needed'&&parseFloat(i.pr||0)>3000).length;
+  const payAlert = SHIP.filter(i=>i.py==='payment needed'&&parseFloat(i.pr||0)>3000).sort((a,b)=>parseFloat(b.pr||0)-parseFloat(a.pr||0)).slice(0,4);
+  const onwaySorted = SHIP.filter(i=>i.st==='on the way').sort((a,b)=>(a.b||'9').localeCompare(b.b||'9')).slice(0,5);
+  const cuttingNow = PROD.filter(i=>i.st==='cutting').slice(0,5);
+
+  let h = '<div class="stats">'
+    +'<div class="stat"><div class="stat-val" style="color:#4a1f8a">'+PROD.length+'</div><div class="stat-lbl">פריטים בייצור</div></div>'
+    +'<div class="stat"><div class="stat-val" style="color:#0d5a48">'+onway+'</div><div class="stat-lbl">משלוחים בדרך</div></div>'
+    +'<div class="stat"><div class="stat-val" style="color:#8a3e0a">'+waiting+'</div><div class="stat-lbl">ממתינים לחומר</div></div>'
+    +'<div class="stat"><div class="stat-val" style="color:#8f1f1f">'+payN+'</div><div class="stat-lbl">תשלומים דחופים</div></div>'
+    +'</div>';
+
+  if (payAlert.length) {
+    h += '<div class="card"><div class="card-title">תשלומים דחופים</div>';
+    payAlert.forEach(i => { const t=parseFloat(i.pr||0),pd=parseFloat(i.pd||0),bal=t-pd; h+='<div class="item"><div class="item-left"><div class="item-name">'+i.n+'</div><div class="item-sub">'+join(i.co,i.cat,i.sp)+'</div><div class="tags"><span class="badge br">תשלום נדרש</span>'+(bal>0?'<span class="badge bz">יתרה: $'+money(bal)+'</span>':'')+(i.b?'<span class="badge ba">'+fmtDate(i.b)+'</span>':'')+'</div></div></div>'; });
+    h += '</div>';
+  }
+
+  if (onwaySorted.length) {
+    h += '<div class="card"><div class="card-title">בדרך — לפי תאריך הגעה</div>';
+    onwaySorted.forEach(i => { const arr=i.wh||i.b; h+='<div class="item"><div class="item-left"><div class="item-name">'+i.n+'</div><div class="item-sub">'+join(i.co,i.cat)+'</div><div class="tags"><span class="badge bt">בדרך</span>'+(arr?'<span class="badge bz">'+fmtDate(arr)+'</span>':'')+(i.pr?'<span class="badge bz">$'+money(i.pr)+'</span>':'')+(i.py?'<span class="badge '+bc(i.py)+'">'+i.py+'</span>':'')+'</div></div></div>'; });
+    h += '<a class="mon-link" href="https://daniellalehavi.monday.com/boards/'+SHIP_BOARD+'" target="_blank">בורד ספקי חול ↗</a></div>';
+  }
+
+  if (cuttingNow.length) {
+    h += '<div class="card"><div class="card-title">בגזירה עכשיו ('+cutting+' פריטים)</div>';
+    cuttingNow.forEach(i => { h+='<div class="item"><div class="item-left"><div class="item-name">'+i.n+'</div><div class="item-sub">'+join(i.s,i.v)+'</div><div class="tags"><span class="badge bb">גזירה</span>'+(i.c?'<span class="badge bp">'+i.c+'</span>':'')+'</div></div><div class="item-right"><div class="item-qty">'+(i.q?i.q+' יח\'':'')+'</div></div></div>'; });
+    h += '<a class="mon-link" href="https://daniellalehavi.monday.com/boards/'+PROD_BOARD+'" target="_blank">בורד ייצור ↗</a></div>';
+  }
+
+  document.getElementById('dashboard').innerHTML = h;
+}
+
+function renderProduction() {
+  const groups = {'cutting':{lbl:'בגזירה',items:[]},'waiting for material':{lbl:'ממתינים לחומרי גלם',items:[]},'ready for cutting':{lbl:'מוכן לגזירה',items:[]},'hardware':{lbl:'חומרה / אביזרים',items:[]},'production':{lbl:'בייצור',items:[]},'other':{lbl:'אחר',items:[]}};
+  PROD.forEach(i => { const k=i.st?.toLowerCase()||'other'; (groups[k]||groups['other']).items.push(i); });
+  let h = '<div class="filters"><button class="filter on" onclick="filterProd(\'all\',this)">הכל ('+PROD.length+')</button><button class="filter" onclick="filterProd(\'cutting\',this)">גזירה ('+groups['cutting'].items.length+')</button><button class="filter" onclick="filterProd(\'waiting for material\',this)">ממתין ('+groups['waiting for material'].items.length+')</button><button class="filter" onclick="filterProd(\'hardware\',this)">חומרה</button><button class="filter" onclick="filterProd(\'production\',this)">ייצור</button></div><div class="card" id="prod-list">';
+  Object.entries(groups).forEach(([key,g]) => {
+    if (!g.items.length) return;
+    h += '<div class="divider" data-gk="'+key+'">'+g.lbl+' — '+g.items.length+'</div>';
+    g.items.forEach(i => { h+='<div class="item" data-f="'+key+'"><div class="item-left"><div class="item-name">'+i.n+'</div><div class="item-sub">'+join(i.s,i.v)+'</div><div class="tags"><span class="badge '+bc(i.st)+'">'+i.st+'</span>'+(i.c?'<span class="badge bp">'+i.c+'</span>':'')+(i.ws?'<span class="badge bz">WS: '+i.ws+'</span>':'')+'</div></div><div class="item-right"><div class="item-qty">'+(i.q?i.q+' יח\'':'')+'</div>'+(i.a?'<div class="item-date">'+i.a+'</div>':'')+'</div></div>'; });
+  });
+  h += '</div><a class="mon-link" href="https://daniellalehavi.monday.com/boards/'+PROD_BOARD+'" target="_blank">פתח בורד ייצור ↗</a>';
+  document.getElementById('production').innerHTML = h;
+}
+
+function filterProd(f, btn) {
+  document.querySelectorAll('#production .filter').forEach(b => b.classList.remove('on')); btn.classList.add('on');
+  document.querySelectorAll('#prod-list .item').forEach(r => { r.style.display=(f==='all'||r.dataset.f===f)?'flex':'none'; });
+  document.querySelectorAll('#prod-list .divider').forEach(d => { d.style.display=(f==='all'||d.dataset.gk===f)?'block':'none'; });
+}
+
+function renderShipments() {
+  const ow = SHIP.filter(i=>i.st==='on the way').sort((a,b)=>(a.b||'9').localeCompare(b.b||'9'));
+  const ip = SHIP.filter(i=>i.st==='production').sort((a,b)=>(a.b||'9').localeCompare(b.b||'9'));
+  const ot = SHIP.filter(i=>!['on the way','production'].includes(i.st));
+  function sr(i) { const arr=i.wh||i.b,t=parseFloat(i.pr||0),pd=parseFloat(i.pd||0),bal=t-pd; return '<div class="item" data-f="'+i.st+'"><div class="item-left"><div class="item-name">'+i.n+'</div><div class="item-sub">'+join(i.co,i.cat,i.sp)+'</div><div class="tags"><span class="badge '+bc(i.st)+'">'+i.st+'</span>'+(arr?'<span class="badge bz">'+fmtDate(arr)+'</span>':'')+(i.pr?'<span class="badge bz">$'+money(i.pr)+'</span>':'')+(i.py?'<span class="badge '+bc(i.py)+'">'+i.py+'</span>':'')+(bal>1&&i.py==='payment needed'?'<span class="badge br">יתרה: $'+money(bal)+'</span>':'')+'</div></div></div>'; }
+  let h = '<div class="filters"><button class="filter on" onclick="filterShip(\'all\',this)">הכל ('+SHIP.length+')</button><button class="filter" onclick="filterShip(\'on the way\',this)">בדרך ('+ow.length+')</button><button class="filter" onclick="filterShip(\'production\',this)">ייצור ('+ip.length+')</button><button class="filter" onclick="filterShip(\'pay\',this)">תשלום נדרש</button></div><div class="card" id="ship-list">';
+  if (ow.length) { h+='<div class="divider">בדרך — '+ow.length+'</div>'; ow.forEach(i=>h+=sr(i)); }
+  if (ip.length) { h+='<div class="divider">בייצור — '+ip.length+'</div>'; ip.forEach(i=>h+=sr(i)); }
+  if (ot.length) { h+='<div class="divider">אחר — '+ot.length+'</div>'; ot.forEach(i=>h+=sr(i)); }
+  h += '</div><a class="mon-link" href="https://daniellalehavi.monday.com/boards/'+SHIP_BOARD+'" target="_blank">פתח בורד ספקי חול ↗</a>';
+  document.getElementById('shipments').innerHTML = h;
+}
+
+function filterShip(f, btn) {
+  document.querySelectorAll('#shipments .filter').forEach(b=>b.classList.remove('on')); btn.classList.add('on');
+  document.querySelectorAll('#ship-list .item').forEach(r => { if(f==='all'){r.style.display='flex';return;} if(f==='pay'){r.style.display=r.innerHTML.includes('payment needed')?'flex':'none';return;} r.style.display=r.dataset.f===f?'flex':'none'; });
+}
+
+function renderAlerts() {
+  const payU = SHIP.filter(i=>i.py==='payment needed'&&parseFloat(i.pr||0)>3000).sort((a,b)=>parseFloat(b.pr||0)-parseFloat(a.pr||0));
+  const waiting = PROD.filter(i=>i.st==='waiting for material');
+  const soon = SHIP.filter(i=>i.st==='on the way'&&i.b).sort((a,b)=>a.b.localeCompare(b.b)).slice(0,3);
+  const cut = PROD.filter(i=>i.st==='cutting');
+  let h = '';
+  payU.forEach(i => { const t=parseFloat(i.pr||0),pd=parseFloat(i.pd||0),bal=t-pd; h+='<div class="alert al-r"><div class="alert-title">תשלום נדרש — '+i.sp+'</div><div class="alert-body">'+i.n+' · $'+money(t)+(bal>0?' · יתרה: $'+money(bal):'')+(i.b?' · הגעה: '+fmtDate(i.b):'')+'</div></div>'; });
+  if (waiting.length) h+='<div class="alert al-a"><div class="alert-title">'+waiting.length+' פריטים ממתינים לחומרי גלם</div><div class="alert-body">'+waiting.slice(0,4).map(i=>i.n).join(', ')+(waiting.length>4?' +'+(waiting.length-4)+' נוספים':'')+'</div></div>';
+  soon.forEach(i => { h+='<div class="alert al-g"><div class="alert-title">מגיע בקרוב — '+i.n+'</div><div class="alert-body">'+join(i.co,fmtDate(i.b))+(i.wh?' · WH: '+fmtDate(i.wh):'')+'</div></div>'; });
+  if (cut.length) h+='<div class="alert al-b"><div class="alert-title">'+cut.length+' פריטים בגזירה</div><div class="alert-body">'+cut.slice(0,5).map(i=>i.n).join(', ')+'</div></div>';
+  if (!h) h='<div class="alert al-g"><div class="alert-title">אין התראות פעילות ✓</div></div>';
+  document.getElementById('alerts').innerHTML = h;
+}
+
+// ── START ────────────────────────────────────────────────────
+loadAll();
+</script>
+</body>
+</html>
