@@ -128,7 +128,7 @@ const DEV_BOARDS = [
   { id: 10059463789, name: "SS26ACCESSORIES",  label: "ארנקים" },
 ];
 // קבוצות שלא רלוונטיות לתצוגה
-const SKIP_GROUPS = ["materials","shapes","טבלת שליטה","נתונים לישיבה","matertials","canceled","marketing"];
+const SKIP_GROUPS = ["materials","shapes","טבלת שליטה","נתונים לישיבה","matertials","marketing"];
 // ═══════════════════════════════════════════════════════════
 
 const PROD_BOARD = 633119005;
@@ -284,7 +284,7 @@ function renderShipments(){
 }
 function fs(f,btn){document.querySelectorAll('#shipments .filter').forEach(b=>b.classList.remove('on'));btn.classList.add('on');document.querySelectorAll('#slist .item').forEach(r=>{if(f==='all'){r.style.display='flex';return;}if(f==='pay'){r.style.display=r.innerHTML.includes('payment needed')?'flex':'none';return;}r.style.display=r.dataset.f===f?'flex':'none';});}
 
-let activeDev=0;
+let activeDev=0,activeGroup={};
 function renderDevelopment(){
   const validBoards=DEV_BOARDS.filter(b=>b.id&&DEV[b.id]);
   if(!validBoards.length){document.getElementById('development').innerHTML='<div style="text-align:center;padding:40px;color:var(--text2);font-size:13px">אין בורדי פיתוח מחוברים</div>';return;}
@@ -295,23 +295,77 @@ function renderDevelopment(){
   validBoards.forEach(b=>{
     const items=DEV[b.id]||[];
     h+='<div id="dev-'+b.id+'" style="display:'+(activeDev===b.id?'block':'none')+'">';
-    // group by mini-drop
-    const byDrop={};
-    items.forEach(i=>{const d=i.drop||'ללא מיני דרופ';if(!byDrop[d])byDrop[d]=[];byDrop[d].push(i);});
-    const dropKeys=Object.keys(byDrop).sort();
-    h+='<div class="filters"><button class="filter on" onclick="filterDev(\'all\',this,'+b.id+')">הכל ('+items.length+')</button>';
-    dropKeys.forEach(d=>{h+='<button class="filter" onclick="filterDev(\''+d+'\',this,'+b.id+')">'+d.replace('SS26','').replace('FW26-27','')+'</button>';});
-    h+='</div><div class="card" id="devlist-'+b.id+'">';
-    dropKeys.forEach(drop=>{
-      h+='<div class="divider" data-drop="'+drop+'">'+drop+' — '+byDrop[drop].length+' דגמים</div>';
-      byDrop[drop].forEach(i=>{h+='<div class="item" data-drop2="'+drop+'"><div class="il"><div class="iname">'+i.n+'</div><div class="isub">'+J(i.s,i.v?'יצרן: '+i.v:'')+'</div><div class="tags"><span class="badge '+bc(i.st)+'">'+i.st+'</span></div></div></div>';});
+    // group by board group, then by mini-drop
+    const byGroup={};
+    const canceledItems=[];
+    items.forEach(i=>{
+      const isCanceled=(i.group||'').toLowerCase().includes('cancel');
+      if(isCanceled){canceledItems.push(i);return;}
+      const g=i.group||'כללי';
+      if(!byGroup[g])byGroup[g]=[];
+      byGroup[g].push(i);
     });
-    h+='</div><a class="mlink" href="https://daniellalehavi.monday.com/boards/'+b.id+'" target="_blank">פתח בורד ב-Monday ↗</a></div>';
+    const groupKeys=Object.keys(byGroup);
+    if(!activeGroup[b.id]&&groupKeys.length)activeGroup[b.id]=groupKeys[0];
+    // group tabs
+    h+='<div class="filters" style="margin-bottom:8px">';
+    groupKeys.forEach(g=>{const short=g.replace(/SS2\d|FW\d+-\d+/,'').trim()||g;h+='<button class="filter'+(activeGroup[b.id]===g?' on':'')+'" onclick="switchGroup(\''+g+'\',this,'+b.id+')">'+(short.length>18?short.slice(0,16)+'…':short)+'</button>';});
+    if(canceledItems.length)h+='<button class="filter'+(activeGroup[b.id]==='__canceled'?' on':'')+'" onclick="switchGroup(\'__canceled\',this,'+b.id+')" style="'+(activeGroup[b.id]==='__canceled'?'background:var(--rb);border-color:var(--r);color:var(--r)':'color:var(--r);border-color:var(--r)')+'">מבוטלים ('+canceledItems.length+')</button>';
+    h+='</div>';
+    // each group panel
+    groupKeys.forEach(g=>{
+      const gItems=byGroup[g];
+      const byDrop={};
+      gItems.forEach(i=>{const d=i.drop||'ללא מיני דרופ';if(!byDrop[d])byDrop[d]=[];byDrop[d].push(i);});
+      const dropKeys=Object.keys(byDrop).sort();
+      h+='<div id="grp-'+b.id+'-'+g.replace(/[^a-z0-9]/gi,'_')+'" style="display:'+(activeGroup[b.id]===g?'block':'none')+'">';
+      h+='<div style="font-size:11px;color:var(--text2);margin-bottom:10px">'+gItems.length+' דגמים</div>';
+      // mini-drop tabs inside group
+      if(dropKeys.length>1){
+        h+='<div class="filters">';
+        h+='<button class="filter on" onclick="filterDropInGroup(\'all\',this,\''+b.id+'\',\''+g.replace(/[^a-z0-9]/gi,'_')+'\')">הכל</button>';
+        dropKeys.forEach(d=>{const short=d.replace(/SS2\dBAGS\d?/,'').replace(/SS26/,'').replace(/FW26-27/,'').trim()||d;h+='<button class="filter" onclick="filterDropInGroup(\''+d+'\',this,\''+b.id+'\',\''+g.replace(/[^a-z0-9]/gi,'_')+'\')">'+short+'</button>';});
+        h+='</div>';
+      }
+      h+='<div class="card" id="glist-'+b.id+'-'+g.replace(/[^a-z0-9]/gi,'_')+'">';
+      dropKeys.forEach(drop=>{
+        h+='<div class="divider" data-drop="'+drop+'">'+drop+' — '+byDrop[drop].length+'</div>';
+        byDrop[drop].forEach(i=>{h+='<div class="item" data-drop2="'+drop+'"><div class="il"><div class="iname">'+i.n+'</div><div class="isub">'+J(i.s,i.v?'יצרן: '+i.v:'')+'</div><div class="tags"><span class="badge '+bc(i.st)+'">'+i.st+'</span>'+(i.drop?'<span class="badge bp">'+i.drop+'</span>':'')+'</div></div></div>';});
+      });
+      h+='</div></div>';
+    });
+    // canceled panel
+    if(canceledItems.length){
+      h+='<div id="grp-'+b.id+'-__canceled" style="display:'+(activeGroup[b.id]==='__canceled'?'block':'none')+'">';
+      h+='<div class="card">';
+      canceledItems.forEach(i=>{h+='<div class="item"><div class="il"><div class="iname" style="color:var(--r)">'+i.n+'</div><div class="isub">'+J(i.s,i.group)+'</div><div class="tags"><span class="badge br">בוטל</span>'+(i.drop?'<span class="badge bz">'+i.drop+'</span>':'')+'</div></div></div>';});
+      h+='</div></div>';
+    }
+    h+='<a class="mlink" href="https://daniellalehavi.monday.com/boards/'+b.id+'" target="_blank">פתח בורד ב-Monday ↗</a></div>';
   });
   document.getElementById('development').innerHTML=h;
 }
 function switchDev(id,btn){activeDev=id;document.querySelectorAll('.dev-tab').forEach(b=>b.classList.remove('on'));btn.classList.add('on');DEV_BOARDS.forEach(b=>{const el=document.getElementById('dev-'+b.id);if(el)el.style.display=b.id===id?'block':'none';});}
-function filterDev(f,btn,boardId){document.querySelectorAll('#dev-'+boardId+' .filter').forEach(b=>b.classList.remove('on'));btn.classList.add('on');document.querySelectorAll('#devlist-'+boardId+' .item').forEach(r=>{r.style.display=(f==='all'||r.dataset.drop2===f)?'flex':'none';});document.querySelectorAll('#devlist-'+boardId+' .divider').forEach(d=>{d.style.display=(f==='all'||d.dataset.drop===f)?'block':'none';});}
+function switchGroup(g,btn,boardId){
+  activeGroup[boardId]=g;
+  const devEl=document.getElementById('dev-'+boardId);
+  devEl.querySelectorAll('.filter').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');
+  // hide all group panels
+  DEV_BOARDS.find(b=>b.id===boardId);
+  const panels=devEl.querySelectorAll('[id^="grp-'+boardId+'-"]');
+  panels.forEach(p=>p.style.display='none');
+  const target=devEl.querySelector('#grp-'+boardId+'-'+g.replace(/[^a-z0-9]/gi,'_'));
+  if(target)target.style.display='block';
+}
+function filterDropInGroup(f,btn,boardId,groupKey){
+  const listEl=document.getElementById('glist-'+boardId+'-'+groupKey);
+  if(!listEl)return;
+  listEl.closest('[id^="grp-"]').querySelectorAll('.filter').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');
+  listEl.querySelectorAll('.item').forEach(r=>{r.style.display=(f==='all'||r.dataset.drop2===f)?'flex':'none';});
+  listEl.querySelectorAll('.divider').forEach(d=>{d.style.display=(f==='all'||d.dataset.drop===f)?'block':'none';});
+}
 
 function renderAlerts(){
   const payU=SHIP.filter(i=>i.py==='payment needed'&&parseFloat(i.pr||0)>3000).sort((a,b)=>parseFloat(b.pr||0)-parseFloat(a.pr||0));
