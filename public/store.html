@@ -107,13 +107,11 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 <div class="nav" id="nav">
   <button class="on" onclick="tab('dashboard',this)">דשבורד</button>
   <button onclick="tab('production',this)">ייצור</button>
-  <button onclick="tab('development',this)">פיתוח</button>
   <button onclick="tab('alerts',this)">התראות</button>
 </div>
 
 <div id="dashboard" class="page on"></div>
 <div id="production" class="page"></div>
-<div id="development" class="page"></div>
 <div id="alerts" class="page"></div>
 
 <script>
@@ -213,7 +211,7 @@ async function loadAll() {
 
 function showLoading(){
   const l='<div class="loading"><div class="spinner"></div><div class="ltxt">שולף מ-Monday...</div></div>';
-  ['dashboard','production','development','alerts'].forEach(id=>document.getElementById(id).innerHTML=l);
+  ['dashboard','production','alerts'].forEach(id=>document.getElementById(id).innerHTML=l);
 }
 
 function tab(id,btn){
@@ -243,7 +241,7 @@ function doSearch(raw){
 }
 function clearSearch(){const i=document.getElementById('q');i.value='';doSearch('');i.focus();}
 
-function renderAll(){renderDashboard();renderProduction();renderDevelopment();renderAlerts();}
+function renderAll(){renderDashboard();renderProduction();renderAlerts();}
 
 function renderDashboard(){
   const cutting=PROD.filter(i=>i.st==='cutting').length,waiting=PROD.filter(i=>i.st==='waiting for material').length,onway=SHIP.filter(i=>i.st==='on the way').length;
