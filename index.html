@@ -171,13 +171,9 @@ function getOverseasDate(collectionTag) {
   const map = window._tagDateMap || {};
   if (!collectionTag) return '';
   const tag = collectionTag.toUpperCase().trim();
-  // Try exact match first (e.g. "FW26-27CAPRI" matches "FW26-27CAPRI")
-  if (map[tag]) {
-    const d = new Date(map[tag]);
-    d.setDate(d.getDate() + 7);
-    return d.toISOString().split('T')[0];
-  }
-  // Fallback: prefix match (e.g. "FW26-27BAGS" matches any "FW26-27*")
+  // Try exact match first (e.g. "SS26TOKYO" matches "SS26TOKYO")
+  if (map[tag]) return map[tag];
+  // Fallback: prefix match
   const prefix = tag.replace(/BAGS|SHOES|ACCESSORIES|WALLETS/gi,'').trim();
   let bestDate = '';
   Object.entries(map).forEach(([t, date]) => {
@@ -185,10 +181,7 @@ function getOverseasDate(collectionTag) {
       if (!bestDate || date < bestDate) bestDate = date;
     }
   });
-  if (!bestDate) return '';
-  const d = new Date(bestDate);
-  d.setDate(d.getDate() + 7);
-  return d.toISOString().split('T')[0];
+  return bestDate;
 }
 
 function money(n){const f=parseFloat(n);return isNaN(f)?'':new Intl.NumberFormat('en-US',{maximumFractionDigits:0}).format(f);}
