@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="he" dir="rtl">
 <head>
@@ -160,6 +159,27 @@ async function fetchBoard(id, cols) {
 }
 
 function cv(item, id) { return item.column_values?.find(c=>c.id===id)?.text||''; }
+function getOverseasDate(collectionTag) {
+  // collectionTag is like "SS26BAGS", "FW26-27BAGS" etc.
+  // Ship tags are like "SS26VENUS", "SS26TOKYO", "FW26-27BONNIEFALL"
+  // Match: ship tag starts with same season prefix
+  const map = window._tagDateMap || {};
+  if (!collectionTag) return '';
+  // Extract season prefix e.g. "SS26" or "FW26-27"
+  const prefix = collectionTag.replace(/BAGS|SHOES|ACCESSORIES|WALLETS/gi,'').trim().toUpperCase();
+  let bestDate = '';
+  Object.entries(map).forEach(([tag, date]) => {
+    if (tag.startsWith(prefix) && date) {
+      if (!bestDate || date < bestDate) bestDate = date;
+    }
+  });
+  if (!bestDate) return '';
+  // Add 7 days for WH arrival
+  const d = new Date(bestDate);
+  d.setDate(d.getDate() + 7);
+  return d.toISOString().split('T')[0];
+}
+
 function money(n){const f=parseFloat(n);return isNaN(f)?'':new Intl.NumberFormat('en-US',{maximumFractionDigits:0}).format(f);}
 function fd(d){if(!d)return'';const p=d.split('-');return p.length===3?p[2]+'.'+p[1]:d;}
 function bc(s){
@@ -186,19 +206,44 @@ async function loadAll() {
 
     const [prodData, shipData, ...devDatas] = await Promise.all([
       fetchBoard(PROD_BOARD, ['status','text7','dropdown__1','dup__of_status','__________________','numbers1','date_mkkf1a2c','lookup_mm34qctq','date_mm2wk228']),
-      fetchBoard(SHIP_BOARD, ['status','supplier__1','country','date6','date_mm2wp8h5','numbers','numeric_mkxrznmz','status_10','status_2__1']),
+      fetchBoard(SHIP_BOARD, ['status','supplier__1','country','date6','date_mm2wp8h5','numbers','numeric_mkxrznmz','status_10','status_2__1','text_mm34cvm4']),
       ...DEV_BOARDS.map(b => fetchBoard(b.id, ['dup__of_sku','status','status_2__1','dropdown__1']))
     ]);
 
     PROD = (prodData.items_page?.items||[])
-      .map(i=>({id:i.id,n:i.name,st:cv(i,'status'),s:cv(i,'text7'),v:cv(i,'dropdown__1'),c:cv(i,'dup__of_status'),q:cv(i,'__________________'),ws:cv(i,'numbers1'),
-        a: fd(cv(i,'date_mkkf1a2c')) || fd(cv(i,'lookup_mm34qctq')) || fd(cv(i,'date_mm2wk228'))
-      }))
+      .map(i=>{
+        const localDate = fd(cv(i,'date_mkkf1a2c')) || fd(cv(i,'date_mm2wk228'));
+        const collection = cv(i,'dup__of_status');
+        const status = cv(i,'status')||'';
+        const isOversea = status.toLowerCase().includes('oversea');
+        const overseasDate = isOversea && !localDate ? fd(getOverseasDate(collection)) : '';
+        return {id:i.id,n:i.name,st:status,s:cv(i,'text7'),v:cv(i,'dropdown__1'),c:collection,q:cv(i,'__________________'),ws:cv(i,'numbers1'),
+          a: localDate || overseasDate,
+          isOversea
+        };
+      })
       .filter(i=>i.st);
 
     SHIP = (shipData.items_page?.items||[])
-      .map(i=>({id:i.id,n:i.name,st:cv(i,'status'),sp:cv(i,'supplier__1'),co:cv(i,'country'),cat:cv(i,'status_2__1'),b:cv(i,'date6'),wh:cv(i,'date_mm2wp8h5'),pr:cv(i,'numbers'),pd:cv(i,'numeric_mkxrznmz'),py:cv(i,'status_10')}))
+      .map(i=>({id:i.id,n:i.name,st:cv(i,'status'),sp:cv(i,'supplier__1'),co:cv(i,'country'),cat:cv(i,'status_2__1'),b:cv(i,'date6'),wh:cv(i,'date_mm2wp8h5'),pr:cv(i,'numbers'),pd:cv(i,'numeric_mkxrznmz'),py:cv(i,'status_10'),tag:(cv(i,'text_mm34cvm4')||'').toUpperCase().trim()}))
       .filter(i=>activeShipStatuses.some(s=>(i.st||'').toLowerCase().includes(s)));
+
+    // Build tag→WH date map for overseas production date lookup
+    // Include ALL shipments (not just active) for date reference
+    const allShipRaw = shipData.items_page?.items||[];
+    const tagDateMap = {};
+    allShipRaw.forEach(i => {
+      const tag = (cv(i,'text_mm34cvm4')||'').toUpperCase().trim();
+      const wh = cv(i,'date_mm2wp8h5');
+      const boat = cv(i,'date6');
+      if (tag && (wh || boat)) {
+        // Keep earliest date per tag (first shipment to arrive)
+        const existing = tagDateMap[tag];
+        const newDate = wh || boat;
+        if (!existing || newDate < existing) tagDateMap[tag] = newDate;
+      }
+    });
+    window._tagDateMap = tagDateMap;
 
     DEV_BOARDS.forEach((board, idx) => {
       const data = devDatas[idx];
