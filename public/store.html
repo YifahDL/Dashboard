@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="DL Store">
+<title>DL Store</title>
+<style>
+:root{--bg:#f5f3ef;--surface:#fff;--border:#e8e4de;--text:#1a1714;--text2:#6b6560;--text3:#9c9590;--accent:#1e1c18;--g:#2a6048;--gb:#e8f2ec;--a:#8a3e0a;--ab:#fdf0e0;--r:#8f1f1f;--rb:#fce8e8;--b:#1a3f7a;--bb:#e8f0fa;--p:#4a1f8a;--pb:#f0ebfa;--t:#0d5a48;--tb:#e0f0eb}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);font-size:15px}
+.hdr{background:var(--accent);color:#f0ede8;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+.brand{font-size:13px;font-weight:600;letter-spacing:2.5px;text-transform:uppercase}
+.hdr-right{display:flex;align-items:center;gap:10px}
+.live{display:flex;align-items:center;gap:5px}
+.dot{width:7px;height:7px;border-radius:50%;background:#1D9E75;animation:pulse 2s infinite}
+.dot.spin{background:#EF9F27;animation:spin 1s linear infinite}
+.dot.err{background:#E24B4A;animation:none}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+@keyframes spin{to{transform:rotate(360deg)}}
+.live-txt{font-size:11px;color:#8ecfbb}
+.live-txt.spin{color:#fac775}.live-txt.err{color:#f09595}
+.rbtn{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);color:#f0ede8;padding:5px 11px;border-radius:6px;font-size:12px;cursor:pointer;font-family:inherit}
+.rbtn:disabled{opacity:.4;cursor:not-allowed}
+.updated{font-size:10px;color:rgba(255,255,255,.4);margin-top:2px;font-family:ui-monospace,monospace}
+.search-bar{background:var(--surface);border-bottom:1px solid var(--border);padding:10px 14px}
+.sinner{display:flex;align-items:center;background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:0 12px}
+.sinner input{flex:1;padding:9px 0;border:none;background:none;font-size:14px;color:var(--text);outline:none}
+.sinner input::placeholder{color:var(--text3)}
+.xbtn{background:none;border:none;color:var(--text3);font-size:16px;cursor:pointer;padding:4px;display:none}
+.sres{margin-top:10px;display:none}
+.slbl{font-size:10px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--text3);padding-bottom:6px;margin-bottom:6px;border-bottom:1px solid var(--border)}
+.ritem{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:11px 13px;margin-bottom:7px}
+.rname{font-size:13px;font-weight:600;margin-bottom:3px}
+.rsku{font-size:11px;font-family:ui-monospace,monospace;color:var(--text2);margin-bottom:5px}
+.rmeta{font-size:12px;color:var(--text2);line-height:1.6}
+.rtags{display:flex;gap:4px;flex-wrap:wrap;margin-top:7px}
+.nores{text-align:center;padding:24px;font-size:13px;color:var(--text2)}
+.nav{background:var(--surface);border-bottom:1px solid var(--border);display:flex;overflow-x:auto;scrollbar-width:none}
+.nav::-webkit-scrollbar{display:none}
+.nav button{flex:1;min-width:60px;padding:12px 4px;font-size:12px;font-weight:500;background:none;border:none;border-bottom:2px solid transparent;cursor:pointer;color:var(--text2);white-space:nowrap;font-family:inherit}
+.nav button.on{border-bottom-color:var(--accent);color:var(--accent);font-weight:600}
+.page{display:none;padding:14px}
+.page.on{display:block}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
+.stat{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px 14px}
+.stat-val{font-size:26px;font-weight:300;line-height:1;margin-bottom:4px}
+.stat-lbl{font-size:11px;color:var(--text2);line-height:1.3}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:12px}
+.ctitle{font-size:10px;font-weight:600;letter-spacing:1.2px;text-transform:uppercase;color:var(--text3);margin-bottom:12px}
+.item{display:flex;align-items:flex-start;justify-content:space-between;padding:11px 0;border-bottom:1px solid var(--border);gap:10px}
+.item:last-child{border-bottom:none;padding-bottom:0}
+.il{flex:1;min-width:0}
+.iname{font-size:13px;font-weight:600;line-height:1.3;margin-bottom:3px}
+.isub{font-size:12px;color:var(--text2)}
+.ir{flex-shrink:0;text-align:left}
+.iqty{font-size:12px;font-family:ui-monospace,monospace;color:var(--text2)}
+.idate{font-size:11px;color:var(--text3);margin-top:3px;font-family:ui-monospace,monospace}
+.tags{display:flex;gap:4px;flex-wrap:wrap;margin-top:6px}
+.badge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:500}
+.bg{background:var(--gb);color:var(--g)}.ba{background:var(--ab);color:var(--a)}.br{background:var(--rb);color:var(--r)}.bb{background:var(--bb);color:var(--b)}.bp{background:var(--pb);color:var(--p)}.bt{background:var(--tb);color:var(--t)}.bz{background:#f0ede8;color:var(--text2)}
+.alert{border-radius:8px;padding:12px 14px;margin-bottom:9px;border-left:3px solid}
+.atitle{font-size:13px;font-weight:600;margin-bottom:3px}
+.abody{font-size:12px;line-height:1.5}
+.al-r{background:var(--rb);border-color:#e05050;color:var(--r)}.al-a{background:var(--ab);border-color:#e8960a;color:var(--a)}.al-g{background:var(--gb);border-color:#30b87a;color:var(--g)}.al-b{background:var(--bb);border-color:#5090e0;color:var(--b)}
+.filters{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.filter{padding:6px 13px;border-radius:20px;border:1px solid var(--border);background:none;font-size:12px;cursor:pointer;color:var(--text2);font-family:inherit}
+.filter.on{background:var(--accent);border-color:var(--accent);color:#f0ede8;font-weight:500}
+.divider{font-size:10px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--text3);padding:10px 0 6px;border-top:1px solid var(--border);margin-top:4px}
+.divider:first-child{border-top:none;padding-top:0;margin-top:0}
+.mlink{display:inline-block;margin-top:10px;font-size:12px;color:var(--b);text-decoration:none;font-family:ui-monospace,monospace}
+.loading{text-align:center;padding:60px 20px;color:var(--text2)}
+.spinner{width:28px;height:28px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 14px}
+.ltxt{font-size:13px;font-family:ui-monospace,monospace}
+.errbox{background:var(--rb);border:1px solid #f09595;border-radius:12px;padding:20px;text-align:center;margin:14px}
+.etitle{font-weight:600;color:var(--r);margin-bottom:8px}
+.esub{font-size:12px;color:var(--text2);margin-bottom:14px;line-height:1.6}
+.retrybtn{background:var(--accent);color:#f0ede8;border:none;padding:9px 22px;border-radius:8px;font-size:13px;cursor:pointer;font-family:inherit;font-weight:500}
+/* Dev board tabs */
+.dev-tabs{display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap}
+.dev-tab{padding:6px 14px;border-radius:20px;border:1px solid var(--border);background:none;font-size:12px;cursor:pointer;color:var(--text2);font-family:inherit}
+.dev-tab.on{background:var(--pb);border-color:var(--p);color:var(--p);font-weight:600}
+.season-badge{display:inline-block;background:var(--pb);color:var(--p);padding:2px 10px;border-radius:20px;font-size:11px;font-weight:600;margin-bottom:12px}
+</style>
+</head>
+<body>
+<div class="hdr">
+  <div class="brand">DL Store</div>
+  <div class="hdr-right">
+    <div>
+      <div class="live"><span class="dot" id="dot"></span><span class="live-txt" id="ltxt">טוען...</span></div>
+      <div class="updated" id="upd"></div>
+    </div>
+    <button class="rbtn" id="rbtn" onclick="loadAll()" disabled>רענן</button>
+  </div>
+</div>
+
+<div class="search-bar">
+  <div class="sinner">
+    <input type="search" id="q" placeholder="חיפוש SKU או שם דגם..." oninput="doSearch(this.value)" />
+    <button class="xbtn" id="xbtn" onclick="clearSearch()">✕</button>
+  </div>
+  <div class="sres" id="sres"></div>
+</div>
+
+<div class="nav" id="nav">
+  <button class="on" onclick="tab('dashboard',this)">דשבורד</button>
+  <button onclick="tab('production',this)">ייצור</button>
+  <button onclick="tab('development',this)">פיתוח</button>
+  <button onclick="tab('alerts',this)">התראות</button>
+</div>
+
+<div id="dashboard" class="page on"></div>
+<div id="production" class="page"></div>
+<div id="development" class="page"></div>
+<div id="alerts" class="page"></div>
+
+<script>
+// ═══════════════════════════════════════════════════════════
+// ⚙️  עדכון עונה: שנה רק את השורות הבאות
+// ═══════════════════════════════════════════════════════════
+const DEV_BOARDS = [
+  { id: 8707224804, name: "SS26BAGS",        label: "תיקים" },
+  { id: 18393538782, name: "SS26SHOES",        label: "נעליים" },
+  { id: 10059463789, name: "SS26ACCESSORIES",  label: "ארנקים" },
+];
+// קבוצות שלא רלוונטיות לתצוגה
+const SKIP_GROUPS = ["materials","shapes","טבלת שליטה","נתונים לישיבה","matertials","marketing"];
+// ═══════════════════════════════════════════════════════════
+
+const PROD_BOARD = 633119005;
+const SHIP_BOARD = 1419615489;
+let PROD=[], SHIP=[], DEV={};
+
+async function callMonday(query) {
+  const r = await fetch('/api/monday', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({query})
+  });
+  if (!r.ok) throw new Error('שגיאת שרת ' + r.status);
+  const d = await r.json();
+  if (d.errors) throw new Error(d.errors[0]?.message);
+  return d;
+}
+
+async function fetchBoard(id, cols) {
+  if (!id) return [];
+  const c = cols.map(x=>'"'+x+'"').join(',');
+  const q = `{boards(ids:${id}){groups{id title}items_page(limit:500){items{id name group{id title}column_values(ids:[${c}]){id text}}}}}`;
+  const d = await callMonday(q);
+  return d?.data?.boards?.[0] || {};
+}
+
+function cv(item, id) { return item.column_values?.find(c=>c.id===id)?.text||''; }
+function money(n){const f=parseFloat(n);return isNaN(f)?'':new Intl.NumberFormat('en-US',{maximumFractionDigits:0}).format(f);}
+function fd(d){if(!d)return'';const p=d.split('-');return p.length===3?p[2]+'.'+p[1]:d;}
+function bc(s){
+  if(!s)return'bz';const l=s.toLowerCase();
+  if(l==='on the way')return'bt';
+  if(l.includes('cutting')&&!l.includes('ready'))return'bb';
+  if(l.includes('waiting')||l.includes('partial')||l.includes('deposit'))return'ba';
+  if(l.includes('ready')||l==='done'||l.includes('sample shipped')||l.includes('fully'))return'bg';
+  if(l.includes('needed')||l.includes('stuck'))return'br';
+  if(l.includes('production')||l.includes('working')||l.includes('ordered')||l.includes('prepare'))return'bp';
+  return'bz';
+}
+function hi(t,q){if(!t||!q)return t||'';const i=t.toLowerCase().indexOf(q.toLowerCase());if(i<0)return t;return t.slice(0,i)+'<mark style="background:#fde68a;border-radius:2px;padding:0 1px">'+t.slice(i,i+q.length)+'</mark>'+t.slice(i+q.length);}
+function J(...p){return p.filter(Boolean).join(' · ');}
+
+async function loadAll() {
+  const btn=document.getElementById('rbtn');
+  const dot=document.getElementById('dot');
+  const ltxt=document.getElementById('ltxt');
+  btn.disabled=true; dot.className='dot spin'; ltxt.className='live-txt spin'; ltxt.textContent='מתעדכן...';
+  showLoading();
+  try {
+    const activeShipStatuses = ['on the way','production','ready waiting shipment','working on it','ordered','deposit paid','arrived not paid yet','waiting supplier pi'];
+
+    const [prodData, shipData, ...devDatas] = await Promise.all([
+      fetchBoard(PROD_BOARD, ['status','text7','dropdown__1','dup__of_status','__________________','numbers1','date_mkkf1a2c']),
+      fetchBoard(SHIP_BOARD, ['status','supplier__1','country','date6','date_mm2wp8h5','numbers','numeric_mkxrznmz','status_10','status_2__1']),
+      ...DEV_BOARDS.map(b => fetchBoard(b.id, ['dup__of_sku','status','status_2__1','dropdown__1']))
+    ]);
+
+    PROD = (prodData.items_page?.items||[])
+      .map(i=>({id:i.id,n:i.name,st:cv(i,'status'),s:cv(i,'text7'),v:cv(i,'dropdown__1'),c:cv(i,'dup__of_status'),q:cv(i,'__________________'),ws:cv(i,'numbers1'),a:fd(cv(i,'date_mkkf1a2c'))}))
+      .filter(i=>i.st);
+
+    SHIP = (shipData.items_page?.items||[])
+      .map(i=>({id:i.id,n:i.name,st:cv(i,'status'),sp:cv(i,'supplier__1'),co:cv(i,'country'),cat:cv(i,'status_2__1'),b:cv(i,'date6'),wh:cv(i,'date_mm2wp8h5'),pr:cv(i,'numbers'),pd:cv(i,'numeric_mkxrznmz'),py:cv(i,'status_10')}))
+      .filter(i=>activeShipStatuses.some(s=>(i.st||'').toLowerCase().includes(s)));
+
+    DEV_BOARDS.forEach((board, idx) => {
+      const data = devDatas[idx];
+      if (!data || !data.items_page) { DEV[board.id] = []; return; }
+      const skipLower = SKIP_GROUPS.map(g=>g.toLowerCase());
+      DEV[board.id] = (data.items_page.items||[])
+        .filter(i => !skipLower.some(s=>(i.group?.title||'').toLowerCase().includes(s)))
+        .map(i=>({id:i.id,n:i.name,s:cv(i,'dup__of_sku'),st:cv(i,'status'),drop:cv(i,'status_2__1'),v:cv(i,'dropdown__1'),group:i.group?.title||''}));
+    });
+
+    const now = new Date().toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'});
+    document.getElementById('upd').textContent='עודכן: '+now;
+    dot.className='dot'; ltxt.className='live-txt'; ltxt.textContent='Monday Live';
+    renderAll();
+  } catch(e) {
+    dot.className='dot err'; ltxt.className='live-txt err'; ltxt.textContent='שגיאה';
+    document.getElementById('dashboard').innerHTML='<div class="errbox"><div class="etitle">שגיאה בחיבור ל-Monday</div><div class="esub">'+e.message+'</div><button class="retrybtn" onclick="loadAll()">נסי שוב</button></div>';
+  }
+  btn.disabled=false;
+}
+
+function showLoading(){
+  const l='<div class="loading"><div class="spinner"></div><div class="ltxt">שולף מ-Monday...</div></div>';
+  ['dashboard','production','development','alerts'].forEach(id=>document.getElementById(id).innerHTML=l);
+}
+
+function tab(id,btn){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('on'));
+  document.querySelectorAll('.nav button').forEach(b=>b.classList.remove('on'));
+  document.getElementById(id).classList.add('on'); btn.classList.add('on');
+}
+
+function doSearch(raw){
+  const q=raw.trim();
+  document.getElementById('xbtn').style.display=q?'block':'none';
+  const res=document.getElementById('sres'),nav=document.getElementById('nav');
+  if(!q){res.style.display='none';res.innerHTML='';nav.style.display='flex';document.querySelectorAll('.page').forEach(p=>{p.style.display=p.classList.contains('on')?'block':'none';});return;}
+  nav.style.display='none';document.querySelectorAll('.page').forEach(p=>{p.style.display='none';});res.style.display='block';
+  const ql=q.toLowerCase();
+  const ph=PROD.filter(i=>(i.s||'').toLowerCase().includes(ql)||(i.n||'').toLowerCase().includes(ql)||(i.c||'').toLowerCase().includes(ql)||(i.v||'').toLowerCase().includes(ql));
+  const sh=SHIP.filter(i=>(i.n||'').toLowerCase().includes(ql)||(i.sp||'').toLowerCase().includes(ql)||(i.cat||'').toLowerCase().includes(ql));
+  // search dev boards
+  const dh=[];
+  DEV_BOARDS.forEach(b=>{if(!DEV[b.id])return;DEV[b.id].filter(i=>(i.s||'').toLowerCase().includes(ql)||(i.n||'').toLowerCase().includes(ql)||(i.drop||'').toLowerCase().includes(ql)).forEach(i=>dh.push({...i,boardName:b.label}));});
+  if(!ph.length&&!sh.length&&!dh.length){res.innerHTML='<div class="nores">לא נמצאו תוצאות עבור "'+q+'"</div>';return;}
+  let html='';
+  if(ph.length){html+='<div class="slbl">ייצור — '+ph.length+'</div>';ph.forEach(i=>{html+='<div class="ritem"><div class="rname">'+hi(i.n,q)+'</div>'+(i.s?'<div class="rsku">SKU: '+hi(i.s,q)+'</div>':'')+'<div class="rmeta">'+J(i.v?'יצרן: '+i.v:'',i.q?'מקומי: '+i.q+' יח\'':'',i.a?'צפי: '+i.a:'')+'</div><div class="rtags"><span class="badge '+bc(i.st)+'">'+i.st+'</span>'+(i.c?'<span class="badge bp">'+i.c+'</span>':'')+'</div></div>';});}
+  if(dh.length){if(ph.length)html+='<div style="height:8px"></div>';html+='<div class="slbl">פיתוח — '+dh.length+'</div>';dh.forEach(i=>{html+='<div class="ritem"><div class="rname">'+hi(i.n,q)+'</div>'+(i.s?'<div class="rsku">SKU: '+hi(i.s,q)+'</div>':'')+'<div class="rmeta">'+J(i.boardName,i.group,i.v?'יצרן: '+i.v:'')+'</div><div class="rtags"><span class="badge '+bc(i.st)+'">'+i.st+'</span>'+(i.drop?'<span class="badge bp">'+i.drop+'</span>':'')+'</div></div>';});}
+  if(sh.length){if(ph.length||dh.length)html+='<div style="height:8px"></div>';html+='<div class="slbl">משלוחים — '+sh.length+'</div>';sh.forEach(i=>{const arr=i.wh||i.b,t=parseFloat(i.pr||0),pd=parseFloat(i.pd||0),bal=t-pd;html+='<div class="ritem"><div class="rname">'+hi(i.n,q)+'</div><div class="rmeta">'+J(i.sp?'ספק: '+i.sp:'',i.co,i.cat)+(arr?'<br>הגעה: '+fd(arr):'')+(i.pr?' · $'+money(i.pr):'')+(bal>1&&i.py==='payment needed'?' · יתרה: $'+money(bal):'')+'</div><div class="rtags"><span class="badge '+bc(i.st)+'">'+i.st+'</span>'+(i.py?'<span class="badge '+bc(i.py)+'">'+i.py+'</span>':'')+'</div></div>';});}
+  res.innerHTML=html;
+}
+function clearSearch(){const i=document.getElementById('q');i.value='';doSearch('');i.focus();}
+
+function renderAll(){renderDashboard();renderProduction();renderDevelopment();renderAlerts();}
+
+function renderDashboard(){
+  const cutting=PROD.filter(i=>i.st==='cutting').length,waiting=PROD.filter(i=>i.st==='waiting for material').length,onway=SHIP.filter(i=>i.st==='on the way').length;
+  const onwaySorted=SHIP.filter(i=>i.st==='on the way').sort((a,b)=>(a.b||'9').localeCompare(b.b||'9')).slice(0,5);
+  const cuttingNow=PROD.filter(i=>i.st==='cutting').slice(0,5);
+  let h='<div class="stats"><div class="stat"><div class="stat-val" style="color:#4a1f8a">'+PROD.length+'</div><div class="stat-lbl">פריטים בייצור</div></div><div class="stat"><div class="stat-val" style="color:#0d5a48">'+onway+'</div><div class="stat-lbl">משלוחים בדרך</div></div><div class="stat"><div class="stat-val" style="color:#8a3e0a">'+waiting+'</div><div class="stat-lbl">ממתינים לחומר</div></div></div>';
+  if(onwaySorted.length){h+='<div class="card"><div class="ctitle">בדרך — לפי הגעה</div>';onwaySorted.forEach(i=>{const arr=i.wh||i.b;h+='<div class="item"><div class="il"><div class="iname">'+i.n+'</div><div class="isub">'+J(i.co,i.cat)+'</div><div class="tags"><span class="badge bt">בדרך</span>'+(arr?'<span class="badge bz">'+fd(arr)+'</span>':'')+'</div></div></div>';});h+='</div>';}
+  if(cuttingNow.length){h+='<div class="card"><div class="ctitle">בגזירה עכשיו ('+cutting+')</div>';cuttingNow.forEach(i=>{h+='<div class="item"><div class="il"><div class="iname">'+i.n+'</div><div class="isub">'+J(i.s,i.v)+'</div><div class="tags"><span class="badge bb">גזירה</span>'+(i.c?'<span class="badge bp">'+i.c+'</span>':'')+'</div></div><div class="ir"><div class="iqty">'+(i.q?i.q+' יח\'':'')+'</div></div></div>';});h+='</div>';}
+  document.getElementById('dashboard').innerHTML=h;
+}
+
+function renderProduction(){
+  const G={'cutting':{l:'בגזירה',items:[]},'waiting for material':{l:'ממתינים לחומרי גלם',items:[]},'ready for cutting':{l:'מוכן לגזירה',items:[]},'hardware':{l:'חומרה / אביזרים',items:[]},'production':{l:'בייצור',items:[]},'other':{l:'אחר',items:[]}};
+  PROD.forEach(i=>{const k=(i.st||'').toLowerCase();(G[k]||G['other']).items.push(i);});
+  const cut=G['cutting'].items.length,wait=G['waiting for material'].items.length;
+  let h='<div class="filters"><button class="filter on" onclick="fp(\'all\',this)">הכל ('+PROD.length+')</button><button class="filter" onclick="fp(\'cutting\',this)">גזירה ('+cut+')</button><button class="filter" onclick="fp(\'waiting for material\',this)">ממתין ('+wait+')</button><button class="filter" onclick="fp(\'hardware\',this)">חומרה</button><button class="filter" onclick="fp(\'production\',this)">ייצור</button></div><div class="card" id="plist">';
+  Object.entries(G).forEach(([k,g])=>{if(!g.items.length)return;h+='<div class="divider" data-gk="'+k+'">'+g.l+' — '+g.items.length+'</div>';g.items.forEach(i=>{h+='<div class="item" data-f="'+k+'"><div class="il"><div class="iname">'+i.n+'</div><div class="isub">'+J(i.s,i.v)+'</div><div class="tags"><span class="badge '+bc(i.st)+'">'+i.st+'</span>'+(i.c?'<span class="badge bp">'+i.c+'</span>':'')+(i.ws?'<span class="badge bz">WS: '+i.ws+'</span>':'')+'</div></div><div class="ir"><div class="iqty">'+(i.q?i.q+' יח\'':'')+'</div>'+(i.a?'<div class="idate">'+i.a+'</div>':'')+'</div></div>';});});
+  h+='</div><a class="mlink" href="https://daniellalehavi.monday.com/boards/'+PROD_BOARD+'" target="_blank">פתח בורד ייצור ↗</a>';
+  document.getElementById('production').innerHTML=h;
+}
+function fp(f,btn){document.querySelectorAll('#production .filter').forEach(b=>b.classList.remove('on'));btn.classList.add('on');document.querySelectorAll('#plist .item').forEach(r=>{r.style.display=(f==='all'||r.dataset.f===f)?'flex':'none';});document.querySelectorAll('#plist .divider').forEach(d=>{d.style.display=(f==='all'||d.dataset.gk===f)?'block':'none';});}
+
+function renderShipments(){
+  const ow=SHIP.filter(i=>i.st==='on the way').sort((a,b)=>(a.b||'9').localeCompare(b.b||'9'));
+  const ip=SHIP.filter(i=>i.st==='production').sort((a,b)=>(a.b||'9').localeCompare(b.b||'9'));
+  const ot=SHIP.filter(i=>!['on the way','production'].includes(i.st));
+  function sr(i){const arr=i.wh||i.b,t=parseFloat(i.pr||0),pd=parseFloat(i.pd||0),bal=t-pd;return'<div class="item" data-f="'+i.st+'"><div class="il"><div class="iname">'+i.n+'</div><div class="isub">'+J(i.co,i.cat,i.sp)+'</div><div class="tags"><span class="badge '+bc(i.st)+'">'+i.st+'</span>'+(arr?'<span class="badge bz">'+fd(arr)+'</span>':'')+(i.pr?'<span class="badge bz">$'+money(i.pr)+'</span>':'')+(i.py?'<span class="badge '+bc(i.py)+'">'+i.py+'</span>':'')+(bal>1&&i.py==='payment needed'?'<span class="badge br">יתרה: $'+money(bal)+'</span>':'')+'</div></div></div>';}
+  let h='<div class="filters"><button class="filter on" onclick="fs(\'all\',this)">הכל ('+SHIP.length+')</button><button class="filter" onclick="fs(\'on the way\',this)">בדרך ('+ow.length+')</button><button class="filter" onclick="fs(\'production\',this)">ייצור ('+ip.length+')</button><button class="filter" onclick="fs(\'pay\',this)">תשלום נדרש</button></div><div class="card" id="slist">';
+  if(ow.length){h+='<div class="divider">בדרך — '+ow.length+'</div>';ow.forEach(i=>h+=sr(i));}
+  if(ip.length){h+='<div class="divider">בייצור — '+ip.length+'</div>';ip.forEach(i=>h+=sr(i));}
+  if(ot.length){h+='<div class="divider">אחר — '+ot.length+'</div>';ot.forEach(i=>h+=sr(i));}
+  h+='</div><a class="mlink" href="https://daniellalehavi.monday.com/boards/'+SHIP_BOARD+'" target="_blank">פתח בורד ספקי חול ↗</a>';
+  document.getElementById('shipments').innerHTML=h;
+}
+function fs(f,btn){document.querySelectorAll('#shipments .filter').forEach(b=>b.classList.remove('on'));btn.classList.add('on');document.querySelectorAll('#slist .item').forEach(r=>{if(f==='all'){r.style.display='flex';return;}if(f==='pay'){r.style.display=r.innerHTML.includes('payment needed')?'flex':'none';return;}r.style.display=r.dataset.f===f?'flex':'none';});}
+
+let activeDev=0,activeGroup={};
+function renderDevelopment(){
+  const validBoards=DEV_BOARDS.filter(b=>b.id&&DEV[b.id]);
+  if(!validBoards.length){document.getElementById('development').innerHTML='<div style="text-align:center;padding:40px;color:var(--text2);font-size:13px">אין בורדי פיתוח מחוברים</div>';return;}
+  if(activeDev===0)activeDev=validBoards[0].id;
+  let h='<div class="dev-tabs">';
+  validBoards.forEach(b=>{h+='<button class="dev-tab'+(activeDev===b.id?' on':'')+'" onclick="switchDev('+b.id+',this)">'+b.label+'</button>';});
+  h+='</div>';
+  validBoards.forEach(b=>{
+    const items=DEV[b.id]||[];
+    h+='<div id="dev-'+b.id+'" style="display:'+(activeDev===b.id?'block':'none')+'">';
+    // group by board group, then by mini-drop
+    const byGroup={};
+    const canceledItems=[];
+    items.forEach(i=>{
+      const isCanceled=(i.group||'').toLowerCase().includes('cancel');
+      if(isCanceled){canceledItems.push(i);return;}
+      const g=i.group||'כללי';
+      if(!byGroup[g])byGroup[g]=[];
+      byGroup[g].push(i);
+    });
+    const groupKeys=Object.keys(byGroup);
+    if(!activeGroup[b.id]&&groupKeys.length)activeGroup[b.id]=groupKeys[0];
+    // group tabs
+    h+='<div class="filters" style="margin-bottom:8px">';
+    groupKeys.forEach(g=>{const short=g.replace(/SS2\d|FW\d+-\d+/,'').trim()||g;h+='<button class="filter'+(activeGroup[b.id]===g?' on':'')+'" onclick="switchGroup(\''+g+'\',this,'+b.id+')">'+(short.length>18?short.slice(0,16)+'…':short)+'</button>';});
+    if(canceledItems.length)h+='<button class="filter'+(activeGroup[b.id]==='__canceled'?' on':'')+'" onclick="switchGroup(\'__canceled\',this,'+b.id+')" style="'+(activeGroup[b.id]==='__canceled'?'background:var(--rb);border-color:var(--r);color:var(--r)':'color:var(--r);border-color:var(--r)')+'">מבוטלים ('+canceledItems.length+')</button>';
+    h+='</div>';
+    // each group panel
+    groupKeys.forEach(g=>{
+      const gItems=byGroup[g];
+      const byDrop={};
+      gItems.forEach(i=>{const d=i.drop||'ללא מיני דרופ';if(!byDrop[d])byDrop[d]=[];byDrop[d].push(i);});
+      const dropKeys=Object.keys(byDrop).sort();
+      h+='<div id="grp-'+b.id+'-'+g.replace(/[^a-z0-9]/gi,'_')+'" style="display:'+(activeGroup[b.id]===g?'block':'none')+'">';
+      h+='<div style="font-size:11px;color:var(--text2);margin-bottom:10px">'+gItems.length+' דגמים</div>';
+      // mini-drop tabs inside group
+      if(dropKeys.length>1){
+        h+='<div class="filters">';
+        h+='<button class="filter on" onclick="filterDropInGroup(\'all\',this,\''+b.id+'\',\''+g.replace(/[^a-z0-9]/gi,'_')+'\')">הכל</button>';
+        dropKeys.forEach(d=>{const short=d.replace(/SS2\dBAGS\d?/,'').replace(/SS26/,'').replace(/FW26-27/,'').trim()||d;h+='<button class="filter" onclick="filterDropInGroup(\''+d+'\',this,\''+b.id+'\',\''+g.replace(/[^a-z0-9]/gi,'_')+'\')">'+short+'</button>';});
+        h+='</div>';
+      }
+      h+='<div class="card" id="glist-'+b.id+'-'+g.replace(/[^a-z0-9]/gi,'_')+'">';
+      dropKeys.forEach(drop=>{
+        h+='<div class="divider" data-drop="'+drop+'">'+drop+' — '+byDrop[drop].length+'</div>';
+        byDrop[drop].forEach(i=>{h+='<div class="item" data-drop2="'+drop+'"><div class="il"><div class="iname">'+i.n+'</div><div class="isub">'+J(i.s,i.v?'יצרן: '+i.v:'')+'</div><div class="tags"><span class="badge '+bc(i.st)+'">'+i.st+'</span>'+(i.drop?'<span class="badge bp">'+i.drop+'</span>':'')+'</div></div></div>';});
+      });
+      h+='</div></div>';
+    });
+    // canceled panel
+    if(canceledItems.length){
+      h+='<div id="grp-'+b.id+'-__canceled" style="display:'+(activeGroup[b.id]==='__canceled'?'block':'none')+'">';
+      h+='<div class="card">';
+      canceledItems.forEach(i=>{h+='<div class="item"><div class="il"><div class="iname" style="color:var(--r)">'+i.n+'</div><div class="isub">'+J(i.s,i.group)+'</div><div class="tags"><span class="badge br">בוטל</span>'+(i.drop?'<span class="badge bz">'+i.drop+'</span>':'')+'</div></div></div>';});
+      h+='</div></div>';
+    }
+    h+='<a class="mlink" href="https://daniellalehavi.monday.com/boards/'+b.id+'" target="_blank">פתח בורד ב-Monday ↗</a></div>';
+  });
+  document.getElementById('development').innerHTML=h;
+}
+function switchDev(id,btn){activeDev=id;document.querySelectorAll('.dev-tab').forEach(b=>b.classList.remove('on'));btn.classList.add('on');DEV_BOARDS.forEach(b=>{const el=document.getElementById('dev-'+b.id);if(el)el.style.display=b.id===id?'block':'none';});}
+function switchGroup(g,btn,boardId){
+  activeGroup[boardId]=g;
+  const devEl=document.getElementById('dev-'+boardId);
+  devEl.querySelectorAll('.filter').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');
+  // hide all group panels
+  DEV_BOARDS.find(b=>b.id===boardId);
+  const panels=devEl.querySelectorAll('[id^="grp-'+boardId+'-"]');
+  panels.forEach(p=>p.style.display='none');
+  const target=devEl.querySelector('#grp-'+boardId+'-'+g.replace(/[^a-z0-9]/gi,'_'));
+  if(target)target.style.display='block';
+}
+function filterDropInGroup(f,btn,boardId,groupKey){
+  const listEl=document.getElementById('glist-'+boardId+'-'+groupKey);
+  if(!listEl)return;
+  listEl.closest('[id^="grp-"]').querySelectorAll('.filter').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');
+  listEl.querySelectorAll('.item').forEach(r=>{r.style.display=(f==='all'||r.dataset.drop2===f)?'flex':'none';});
+  listEl.querySelectorAll('.divider').forEach(d=>{d.style.display=(f==='all'||d.dataset.drop===f)?'block':'none';});
+}
+
+function renderAlerts(){
+  const waiting=PROD.filter(i=>i.st==='waiting for material');
+  const soon=SHIP.filter(i=>i.st==='on the way'&&i.b).sort((a,b)=>a.b.localeCompare(b.b)).slice(0,3);
+  const cut=PROD.filter(i=>i.st==='cutting');
+  let h='';
+  if(waiting.length)h+='<div class="alert al-a"><div class="atitle">'+waiting.length+' פריטים ממתינים לחומרי גלם</div><div class="abody">'+waiting.slice(0,4).map(i=>i.n).join(', ')+(waiting.length>4?' +'+(waiting.length-4)+' נוספים':'')+'</div></div>';
+  soon.forEach(i=>{h+='<div class="alert al-g"><div class="atitle">מגיע בקרוב — '+i.n+'</div><div class="abody">'+J(i.co,fd(i.b))+(i.wh?' · WH: '+fd(i.wh):'')+'</div></div>';});
+  if(cut.length)h+='<div class="alert al-b"><div class="atitle">'+cut.length+' פריטים בגזירה</div><div class="abody">'+cut.slice(0,5).map(i=>i.n).join(', ')+'</div></div>';
+  if(!h)h='<div class="alert al-g"><div class="atitle">אין התראות פעילות ✓</div></div>';
+  document.getElementById('alerts').innerHTML=h;
+}
+
+loadAll();
+</script>
+</body>
+</html>
